@@ -21,7 +21,10 @@ import {
   CreditCard,
   ArrowUpRight,
   ArrowDownRight,
-  RefreshCw
+  RefreshCw,
+  Wallet,
+  FileText,
+  DollarSign
 } from "lucide-react";
 
 interface Transaction {
@@ -348,54 +351,6 @@ export default function FinancialDashboard() {
           </Button>
         </div>
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="space-y-6">
-            {/* Skeleton Financial Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-24"></div>
-                        <div className="h-8 bg-gray-200 rounded w-32"></div>
-                      </div>
-                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            
-            {/* Skeleton Filters */}
-            <Card className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-16"></div>
-                      <div className="h-10 bg-gray-200 rounded"></div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Skeleton Table */}
-            <Card className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-12 bg-gray-200 rounded"></div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Error State */}
         {hasError && (
           <div className="mb-8">
@@ -449,285 +404,399 @@ export default function FinancialDashboard() {
         {/* Main Content - Only show when not loading and no errors */}
         {!isLoading && !hasError && (
           <>
+            {/* Financial Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {formatCurrency(financialSummary.totalRevenue)}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-green-100 rounded-full">
+                      <TrendingUp className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Token Sales</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {formatCurrency(financialSummary.tokenSales)}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-blue-100 rounded-full">
+                      <Coins className="w-6 h-6 text-blue-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Pending Escrow</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {formatCurrency(financialSummary.pendingEscrow)}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-orange-100 rounded-full">
+                      <CreditCard className="w-6 h-6 text-orange-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Withdrawals</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {formatCurrency(financialSummary.totalWithdrawals)}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-red-100 rounded-full">
+                      <TrendingDown className="w-6 h-6 text-red-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Filters */}
             <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Filter className="w-5 h-5" />
-              <span>Filters & Controls</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              <div>
-                <Label>Date Range</Label>
-                <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="today">Today</SelectItem>
-                    <SelectItem value="week">Last 7 Days</SelectItem>
-                    <SelectItem value="month">Last 30 Days</SelectItem>
-                    <SelectItem value="year">Last Year</SelectItem>
-                    <SelectItem value="custom">Custom Range</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {dateFilter === 'custom' && (
-                <>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Filter className="w-5 h-5" />
+                  <span>Filters & Controls</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   <div>
-                    <Label>Start Date</Label>
-                    <Input
-                      type="date"
-                      value={customStartDate}
-                      onChange={(e) => setCustomStartDate(e.target.value)}
-                    />
+                    <Label>Date Range</Label>
+                    <Select value={dateFilter} onValueChange={setDateFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="week">Last 7 Days</SelectItem>
+                        <SelectItem value="month">Last 30 Days</SelectItem>
+                        <SelectItem value="year">Last Year</SelectItem>
+                        <SelectItem value="custom">Custom Range</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
+
+                  {dateFilter === 'custom' && (
+                    <>
+                      <div>
+                        <Label>Start Date</Label>
+                        <Input
+                          type="date"
+                          value={customStartDate}
+                          onChange={(e) => setCustomStartDate(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label>End Date</Label>
+                        <Input
+                          type="date"
+                          value={customEndDate}
+                          onChange={(e) => setCustomEndDate(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
+
                   <div>
-                    <Label>End Date</Label>
-                    <Input
-                      type="date"
-                      value={customEndDate}
-                      onChange={(e) => setCustomEndDate(e.target.value)}
-                    />
+                    <Label>Transaction Type</Label>
+                    <Select value={transactionTypeFilter} onValueChange={setTransactionTypeFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="findertoken_purchase">Token Purchases</SelectItem>
+                        <SelectItem value="escrow_funding">Escrow Funding</SelectItem>
+                        <SelectItem value="withdrawal">Withdrawals</SelectItem>
+                        <SelectItem value="grant">Token Grants</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </>
-              )}
 
-              <div>
-                <Label>Transaction Type</Label>
-                <Select value={transactionTypeFilter} onValueChange={setTransactionTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="findertoken_purchase">Token Purchases</SelectItem>
-                    <SelectItem value="escrow_funding">Escrow Funding</SelectItem>
-                    <SelectItem value="withdrawal">Withdrawals</SelectItem>
-                    <SelectItem value="grant">Token Grants</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>View Mode</Label>
-                <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-end">
-                <Button onClick={exportToCSV} className="flex items-center space-x-2">
-                  <Download className="w-4 h-4" />
-                  <span>Export CSV</span>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(financialSummary.totalRevenue)}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Token Sales</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(financialSummary.tokenSales)}
-                  </p>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Coins className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Pending Escrow</p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    {formatCurrency(financialSummary.pendingEscrow)}
-                  </p>
-                </div>
-                <div className="p-3 bg-orange-100 rounded-full">
-                  <CreditCard className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Withdrawals</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {formatCurrency(financialSummary.totalWithdrawals)}
-                  </p>
-                </div>
-                <div className="p-3 bg-red-100 rounded-full">
-                  <TrendingDown className="w-6 h-6 text-red-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Period-based Revenue Chart */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5" />
-              <span>Revenue by {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {periodData.map((item, index) => {
-                const periodKey = Object.keys(item)[0];
-                const period = item[periodKey];
-                const amount = item.amount;
-                
-                return (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">{period}</span>
-                    <span className="text-lg font-bold text-green-600">
-                      {formatCurrency(amount)}
-                    </span>
+                  <div>
+                    <Label>View Mode</Label>
+                    <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Detailed Transactions Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Eye className="w-5 h-5" />
-              <span>Transaction Details</span>
-              <Badge variant="outline">
-                {filteredTransactions.length} transactions
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date & Time</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Reference</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.slice(0, 50).map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell className="font-mono text-sm">
-                        {formatDate(transaction.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {getTransactionIcon(transaction.type)}
-                          <Badge variant={
-                            transaction.type === 'findertoken_purchase' ? 'default' :
-                            transaction.type === 'escrow_funding' ? 'secondary' :
-                            transaction.type === 'withdrawal' ? 'destructive' :
-                            'outline'
-                          }>
-                            {transaction.type.replace('_', ' ')}
-                          </Badge>
+                  <div className="flex items-end">
+                    <Button onClick={exportToCSV} className="flex items-center space-x-2">
+                      <Download className="w-4 h-4" />
+                      <span>Export CSV</span>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 3-Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              {/* Column 1: Withdrawals */}
+              <Card className="h-fit">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Wallet className="w-5 h-5 text-red-600" />
+                    <span>Withdrawal Requests</span>
+                    <Badge variant="outline" className="ml-auto">
+                      {withdrawals.length}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {withdrawals.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Wallet className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <p>No withdrawal requests found</p>
+                      </div>
+                    ) : (
+                      withdrawals.slice(0, 10).map((withdrawal) => (
+                        <div key={withdrawal.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">
+                                {withdrawal.finder.user.firstName} {withdrawal.finder.user.lastName}
+                              </p>
+                              <p className="text-xs text-gray-500">{withdrawal.finder.user.email}</p>
+                            </div>
+                            <Badge 
+                              variant={
+                                withdrawal.status === 'approved' ? 'default' :
+                                withdrawal.status === 'pending' ? 'secondary' :
+                                withdrawal.status === 'processing' ? 'outline' :
+                                'destructive'
+                              }
+                              className="text-xs"
+                            >
+                              {withdrawal.status}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold text-red-600">
+                              {formatCurrency(parseFloat(withdrawal.amount))}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(withdrawal.requestedAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">
+                            via {withdrawal.paymentMethod}
+                          </p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {transaction.user ? (
-                          <div>
-                            <div className="font-medium">
-                              {transaction.user.firstName} {transaction.user.lastName}
+                      ))
+                    )}
+                    {withdrawals.length > 10 && (
+                      <div className="text-center pt-2">
+                        <p className="text-sm text-gray-500">
+                          Showing first 10 of {withdrawals.length} requests
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Column 2: Contract Funding */}
+              <Card className="h-fit">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <span>Contract Funding</span>
+                    <Badge variant="outline" className="ml-auto">
+                      {contracts.length}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {contracts.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <p>No contracts found</p>
+                      </div>
+                    ) : (
+                      contracts.slice(0, 10).map((contract) => (
+                        <div key={contract.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">
+                                Client: {contract.client.firstName} {contract.client.lastName}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                Finder: {contract.finder.user.firstName} {contract.finder.user.lastName}
+                              </p>
                             </div>
-                            <div className="text-sm text-gray-500">
-                              {transaction.user.email}
-                            </div>
+                            <Badge 
+                              variant={
+                                contract.escrowStatus === 'completed' ? 'default' :
+                                contract.escrowStatus === 'held' ? 'secondary' :
+                                contract.escrowStatus === 'released' ? 'outline' :
+                                'destructive'
+                              }
+                              className="text-xs"
+                            >
+                              {contract.escrowStatus}
+                            </Badge>
                           </div>
-                        ) : transaction.finder ? (
-                          <div>
-                            <div className="font-medium">
-                              {transaction.finder.user.firstName} {transaction.finder.user.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {transaction.finder.user.email}
-                            </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold text-blue-600">
+                              {formatCurrency(parseFloat(contract.amount))}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(contract.createdAt)}
+                            </span>
                           </div>
-                        ) : (
-                          <span className="text-gray-400">N/A</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-md truncate">
-                        {transaction.description}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        <span className={
-                          transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                        }>
-                          {transaction.amount > 0 ? '+' : ''}
-                          {formatCurrency(Math.abs(transaction.amount))}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {transaction.reference || '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        </div>
+                      ))
+                    )}
+                    {contracts.length > 10 && (
+                      <div className="text-center pt-2">
+                        <p className="text-sm text-gray-500">
+                          Showing first 10 of {contracts.length} contracts
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Column 3: Recent Transactions */}
+              <Card className="h-fit">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                    <span>Recent Transactions</span>
+                    <Badge variant="outline" className="ml-auto">
+                      {filteredTransactions.length}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {filteredTransactions.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <DollarSign className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <p>No transactions found</p>
+                      </div>
+                    ) : (
+                      filteredTransactions.slice(0, 10).map((transaction) => (
+                        <div key={transaction.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center space-x-2">
+                              {getTransactionIcon(transaction.type)}
+                              <Badge 
+                                variant={
+                                  transaction.type === 'findertoken_purchase' ? 'default' :
+                                  transaction.type === 'escrow_funding' ? 'secondary' :
+                                  transaction.type === 'withdrawal' ? 'destructive' :
+                                  'outline'
+                                }
+                                className="text-xs"
+                              >
+                                {transaction.type.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(transaction.createdAt)}
+                            </span>
+                          </div>
+                          <div className="mb-2">
+                            {transaction.user ? (
+                              <p className="font-medium text-sm">
+                                {transaction.user.firstName} {transaction.user.lastName}
+                              </p>
+                            ) : transaction.finder ? (
+                              <p className="font-medium text-sm">
+                                {transaction.finder.user.firstName} {transaction.finder.user.lastName}
+                              </p>
+                            ) : (
+                              <p className="text-sm text-gray-400">N/A</p>
+                            )}
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs text-gray-600 truncate flex-1 mr-2">
+                              {transaction.description}
+                            </p>
+                            <span className={`text-sm font-bold ${
+                              transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {transaction.amount > 0 ? '+' : ''}
+                              {formatCurrency(Math.abs(transaction.amount))}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                    {filteredTransactions.length > 10 && (
+                      <div className="text-center pt-2">
+                        <p className="text-sm text-gray-500">
+                          Showing first 10 of {filteredTransactions.length} transactions
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            
-            {filteredTransactions.length > 50 && (
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500">
-                  Showing first 50 transactions. Export CSV for complete data.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+
+            {/* Period-based Revenue Chart */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calendar className="w-5 h-5" />
+                  <span>Revenue by {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {periodData.map((item, index) => {
+                    const periodKey = Object.keys(item)[0];
+                    const period = item[periodKey];
+                    const amount = item.amount;
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">{period}</span>
+                        <span className="text-lg font-bold text-green-600">
+                          {formatCurrency(amount)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </>
         )}
       </div>

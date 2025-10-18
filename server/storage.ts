@@ -186,7 +186,7 @@ export interface IStorage {
   getActiveCategories(): Promise<Category[]>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: string, updates: Partial<Category>): Promise<Category | undefined>;
-  deleteCategory(id: string): Promise<void>;
+  deleteCategory(id: string): Promise<boolean>;
 
   // User management operations
   banUser(userId: string, reason: string): Promise<User | undefined>;
@@ -675,7 +675,40 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllTransactionsWithUsers(): Promise<any[]> {
-    return [];
+    const allTransactions = await db
+      .select()
+      .from(transactions)
+      .orderBy(desc(transactions.createdAt));
+
+    const transactionsWithUsers = await Promise.all(
+      allTransactions.map(async (transaction) => {
+        let user = null;
+        let finder = null;
+
+        if (transaction.userId) {
+          user = await this.getUser(transaction.userId);
+        }
+
+        if (transaction.finderId) {
+          const finderRecord = await this.getFinder(transaction.finderId);
+          if (finderRecord) {
+            const finderUser = await this.getUser(finderRecord.userId);
+            finder = {
+              ...finderRecord,
+              user: finderUser
+            };
+          }
+        }
+
+        return {
+          ...transaction,
+          user,
+          finder
+        };
+      })
+    );
+
+    return transactionsWithUsers;
   }
 
   async getAllContractsWithUsers() {
@@ -863,7 +896,7 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async deleteCategory(id: string): Promise<void> {
+  async deleteCategory(id: string): Promise<boolean> {
     try {
       const result = await db.delete(categories).where(eq(categories.id, id)).returning();
       return result.length > 0;
@@ -929,7 +962,31 @@ class DatabaseStorage implements IStorage {
   }
 
   async getWithdrawalRequests(): Promise<any[]> {
-    return [];
+    const allWithdrawals = await db
+      .select()
+      .from(withdrawalRequests)
+      .orderBy(desc(withdrawalRequests.requestedAt));
+
+    const withdrawalsWithFinders = await Promise.all(
+      allWithdrawals.map(async (withdrawal) => {
+        const finder = await this.getFinder(withdrawal.finderId);
+        let finderUser = null;
+
+        if (finder) {
+          finderUser = await this.getUser(finder.userId);
+        }
+
+        return {
+          ...withdrawal,
+          finder: finder ? {
+            ...finder,
+            user: finderUser
+          } : null
+        };
+      })
+    );
+
+    return withdrawalsWithFinders;
   }
 
   async updateWithdrawalRequest(id: string, updates: Partial<WithdrawalRequest>): Promise<WithdrawalRequest | undefined> {
@@ -1292,16 +1349,6 @@ class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching blog posts:', error);
       return [];
-    }
-  }
-
-  async getBlogPost(id: string): Promise<BlogPost | undefined> {
-    try {
-      const result = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
-      return result[0];
-    } catch (error) {
-      console.error('Error fetching blog post:', error);
-      return undefined;
     }
   }
 
@@ -2613,33 +2660,6 @@ class DatabaseStorage implements IStorage {
       .limit(1);
 
     return result[0];
-  }
-
-  async getConversationByProposal(proposalId: string): Promise<any> {
-    const result = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.proposalId, proposalId))
-      .limit(1);
-
-    return result[0];
-  }
-
-  async createConversation(data: { clientId: string; finderId: string; proposalId: string }): Promise<any> {
-    const conversationId = generateId();
-    const [conversation] = await db
-      .insert(conversations)
-      .values({
-        id: conversationId,
-        clientId: data.clientId,
-        finderId: data.finderId,
-        proposalId: data.proposalId,
-        createdAt: new Date(),
-        lastMessageAt: new Date(),
-      })
-      .returning();
-
-    return conversation;
   }
 }
 

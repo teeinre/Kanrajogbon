@@ -1002,6 +1002,7 @@ var init_schema = __esm({
 });
 
 // server/index.ts
+import dotenv2 from "dotenv";
 import express3 from "express";
 
 // server/routes.ts
@@ -1013,13 +1014,15 @@ init_schema();
 
 // server/db.ts
 init_schema();
+import dotenv from "dotenv";
+import path from "path";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import dotenv from "dotenv";
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 var { Pool } = pg;
-if (process.env.NODE_ENV !== "production") {
-  dotenv.config();
-}
+console.log("DATABASE_URL:", process.env.DATABASE_URL ? "Set" : "Not set");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("Current working directory:", process.cwd());
 if (!process.env.DATABASE_URL) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?"
@@ -1033,13 +1036,6 @@ var db = drizzle({ client: pool, schema: schema_exports });
 
 // server/storage.ts
 import { eq, and, desc, asc, sql as sql2 } from "drizzle-orm";
-
-// shared/utils.ts
-function generateId() {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
-
-// server/storage.ts
 var DatabaseStorage = class {
   // User operations
   async getUser(id) {
@@ -1690,15 +1686,6 @@ var DatabaseStorage = class {
     } catch (error) {
       console.error("Error fetching blog posts:", error);
       return [];
-    }
-  }
-  async getBlogPost(id) {
-    try {
-      const result = await db.select().from(blogPosts).where(eq(blogPosts.id, id)).limit(1);
-      return result[0];
-    } catch (error) {
-      console.error("Error fetching blog post:", error);
-      return void 0;
     }
   }
   async getAllBlogPosts() {
@@ -2716,22 +2703,6 @@ var DatabaseStorage = class {
     }).from(proposals).innerJoin(finders, eq(proposals.finderId, finders.id)).innerJoin(users2, eq(finders.userId, users2.id)).innerJoin(finds, eq(proposals.findId, finds.id)).where(eq(proposals.id, id)).limit(1);
     return result[0];
   }
-  async getConversationByProposal(proposalId) {
-    const result = await db.select().from(conversations).where(eq(conversations.proposalId, proposalId)).limit(1);
-    return result[0];
-  }
-  async createConversation(data) {
-    const conversationId = generateId();
-    const [conversation] = await db.insert(conversations).values({
-      id: conversationId,
-      clientId: data.clientId,
-      finderId: data.finderId,
-      proposalId: data.proposalId,
-      createdAt: /* @__PURE__ */ new Date(),
-      lastMessageAt: /* @__PURE__ */ new Date()
-    }).returning();
-    return conversation;
-  }
 };
 var storage = new DatabaseStorage();
 
@@ -2771,7 +2742,7 @@ var ObjectStorageService = class {
     const pathsStr = process.env.PUBLIC_OBJECT_SEARCH_PATHS || "";
     const paths = Array.from(
       new Set(
-        pathsStr.split(",").map((path4) => path4.trim()).filter((path4) => path4.length > 0)
+        pathsStr.split(",").map((path5) => path5.trim()).filter((path5) => path5.length > 0)
       )
     );
     if (paths.length === 0) {
@@ -2786,8 +2757,8 @@ var ObjectStorageService = class {
     const dir = process.env.PRIVATE_OBJECT_DIR || "";
     if (!dir) {
       const fs3 = __require("fs");
-      const path4 = __require("path");
-      const uploadsDir = path4.join(process.cwd(), "uploads");
+      const path5 = __require("path");
+      const uploadsDir = path5.join(process.cwd(), "uploads");
       if (!fs3.existsSync(uploadsDir)) {
         fs3.mkdirSync(uploadsDir, { recursive: true });
       }
@@ -2894,11 +2865,11 @@ var ObjectStorageService = class {
     return true;
   }
 };
-function parseObjectPath(path4) {
-  if (!path4.startsWith("/")) {
-    path4 = `/${path4}`;
+function parseObjectPath(path5) {
+  if (!path5.startsWith("/")) {
+    path5 = `/${path5}`;
   }
-  const pathParts = path4.split("/");
+  const pathParts = path5.split("/");
   if (pathParts.length < 3) {
     throw new Error("Invalid path: must contain at least a bucket name");
   }
@@ -2945,7 +2916,7 @@ init_schema();
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import multer from "multer";
-import path from "path";
+import path2 from "path";
 import fs from "fs";
 import { eq as eq4 } from "drizzle-orm";
 
@@ -4245,7 +4216,7 @@ async function requireAdmin(req, res, next) {
 }
 var storage_multer = multer.diskStorage({
   destination: function(req, file, cb) {
-    const uploadDir = path.join(process.cwd(), "uploads");
+    const uploadDir = path2.join(process.cwd(), "uploads");
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -4253,7 +4224,7 @@ var storage_multer = multer.diskStorage({
   },
   filename: function(req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const fileExtension = path.extname(file.originalname);
+    const fileExtension = path2.extname(file.originalname);
     cb(null, file.fieldname + "-" + uniqueSuffix + fileExtension);
   }
 });
@@ -4286,7 +4257,7 @@ var upload = multer({
   }
 });
 async function registerRoutes(app2) {
-  app2.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  app2.use("/uploads", express.static(path2.join(process.cwd(), "uploads")));
   app2.put("/api/admin/settings", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const settings = req.body;
@@ -8508,13 +8479,13 @@ async function registerRoutes(app2) {
 // server/vite.ts
 import express2 from "express";
 import fs2 from "fs";
-import path3 from "path";
+import path4 from "path";
 import { createServer as createViteServer, createLogger } from "vite";
 
 // vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path2 from "path";
+import path3 from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 var vite_config_default = defineConfig({
   plugins: [
@@ -8528,14 +8499,14 @@ var vite_config_default = defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path2.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path2.resolve(import.meta.dirname, "shared"),
-      "@assets": path2.resolve(import.meta.dirname, "attached_assets")
+      "@": path3.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path3.resolve(import.meta.dirname, "shared"),
+      "@assets": path3.resolve(import.meta.dirname, "attached_assets")
     }
   },
-  root: path2.resolve(import.meta.dirname, "client"),
+  root: path3.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: path2.resolve(import.meta.dirname, "dist/public"),
+    outDir: path3.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true
   },
   server: {
@@ -8584,7 +8555,7 @@ async function setupVite(app2, server) {
       return next();
     }
     try {
-      const clientTemplate = path3.resolve(
+      const clientTemplate = path4.resolve(
         import.meta.dirname,
         "..",
         "client",
@@ -8604,7 +8575,7 @@ async function setupVite(app2, server) {
   });
 }
 function serveStatic(app2) {
-  const distPath = path3.resolve(import.meta.dirname, "public");
+  const distPath = path4.resolve(import.meta.dirname, "public");
   if (!fs2.existsSync(distPath)) {
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
@@ -8615,7 +8586,7 @@ function serveStatic(app2) {
     if (req.url.startsWith("/api/")) {
       return next();
     }
-    res.sendFile(path3.resolve(distPath, "index.html"));
+    res.sendFile(path4.resolve(distPath, "index.html"));
   });
 }
 
@@ -8755,14 +8726,13 @@ var AutoReleaseService = class _AutoReleaseService {
 var autoReleaseService = AutoReleaseService.getInstance();
 
 // server/index.ts
-import dotenv2 from "dotenv";
 dotenv2.config();
 var app = express3();
 app.use(express3.json({ limit: "50mb" }));
 app.use(express3.urlencoded({ extended: false, limit: "50mb" }));
 app.use((req, res, next) => {
   const start = Date.now();
-  const path4 = req.path;
+  const path5 = req.path;
   let capturedJsonResponse = void 0;
   const originalResJson = res.json;
   res.json = function(bodyJson, ...args) {
@@ -8771,8 +8741,8 @@ app.use((req, res, next) => {
   };
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path4.startsWith("/api")) {
-      let logLine = `${req.method} ${path4} ${res.statusCode} in ${duration}ms`;
+    if (path5.startsWith("/api")) {
+      let logLine = `${req.method} ${path5} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }

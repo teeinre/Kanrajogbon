@@ -189,15 +189,29 @@ export class FlutterwaveService {
   }
 
   verifyWebhookSignature(payload: string, signature: string): boolean {
+    // For development/testing, allow webhook without signature verification
+    if (process.env.NODE_ENV === 'development' && !signature) {
+      console.log('Development mode: Allowing webhook without signature verification');
+      return true;
+    }
+
     if (!signature || !process.env.FLUTTERWAVE_SECRET_HASH) {
+      console.log('Missing signature or FLUTTERWAVE_SECRET_HASH');
       return false;
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.FLUTTERWAVE_SECRET_HASH)
-      .update(payload, 'utf8')
-      .digest('hex');
+    try {
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.FLUTTERWAVE_SECRET_HASH)
+        .update(payload, 'utf8')
+        .digest('hex');
 
-    return expectedSignature === signature;
+      const isValid = expectedSignature === signature;
+      console.log('Webhook signature verification:', { isValid, expectedSignature, receivedSignature: signature });
+      return isValid;
+    } catch (error) {
+      console.error('Error verifying webhook signature:', error);
+      return false;
+    }
   }
 }
