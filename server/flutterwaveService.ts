@@ -82,11 +82,7 @@ export class FlutterwaveService {
   getBaseUrl(): string {
     // Get the correct base URL for redirects
     if (process.env.NODE_ENV === 'production') {
-      return process.env.REPLIT_DOMAINS ? 
-        `https://${process.env.REPLIT_DOMAINS}` : 
-        process.env.FRONTEND_URL || 
-        process.env.BASE_URL || 
-        'https://your-production-domain.com';
+      return 'https://findermeister.com';
     } else {
       return process.env.REPLIT_DOMAINS ? 
         `https://${process.env.REPLIT_DOMAINS}` : 

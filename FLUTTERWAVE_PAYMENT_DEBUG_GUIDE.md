@@ -23,9 +23,11 @@ Replace the placeholder keys in `.env`:
 
 ```env
 # Flutterwave Configuration - Use your actual keys
-FLUTTERWAVE_PUBLIC_KEY=YOUR_ACTUAL_PUBLIC_KEY_HERE
-FLUTTERWAVE_SECRET_KEY=YOUR_ACTUAL_SECRET_KEY_HERE
+FLUTTERWAVE_PUBLIC_KEY=FLWPUBK-811fbeaf13302885fea3437b7f9456b9-X
+FLUTTERWAVE_SECRET_KEY=FLWSECK-dc00a39d0220ed55bbca419dfc1e7474-199f6909234vt-X
 FLUTTERWAVE_SECRET_HASH=FM-FinderMeister-Webhook-Secret
+FRONTEND_URL=https://findermeister.com
+BASE_URL=https://findermeister.com
 ```
 
 ### 3. Verify Configuration
@@ -68,14 +70,19 @@ curl -X POST http://localhost:5000/api/contracts/CONTRACT_ID/payment \
 - **Development**: Webhooks work without signature verification
 - **Production**: Requires proper `FLUTTERWAVE_SECRET_HASH`
 
-### 2. Detailed Logging
+### 2. Domain Configuration Fixed
+- **Production**: Redirects now point to `https://findermeister.com`
+- **Development**: Uses `http://localhost:5000`
+- **Payment Success**: Redirects to your actual domain
+
+### 3. Detailed Logging
 All payment operations now include detailed logging:
 - Payment initialization requests
 - Webhook payload verification
 - Transaction processing steps
 - Error details and stack traces
 
-### 3. Enhanced Error Handling
+### 4. Enhanced Error Handling
 - Better error messages for debugging
 - Graceful failure handling
 - Detailed error logging
