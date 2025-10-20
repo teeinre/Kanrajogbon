@@ -161,66 +161,69 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-finder-red text-white px-4 sm:px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 mr-8">
-            <img
-              src={logoImage}
-              alt="FinderMeister Logo"
-              className="w-6 h-6 object-contain rounded-full"
-            />
-            <span className="text-xl font-bold">FinderMeister</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="#how-it-works" className="hover:underline transition-all duration-200">
-              How it Works
+      <header className="bg-finder-red text-white px-3 sm:px-4 lg:px-6 py-3 sm:py-4 shadow-lg">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
+              <img
+                src={logoImage}
+                alt="FinderMeister Logo"
+                className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-full"
+              />
+              <span className="text-lg sm:text-xl lg:text-2xl font-bold truncate">FinderMeister</span>
             </Link>
-            <Link href="/login" className="hover:underline transition-all duration-200">
-              Log In
-            </Link>
-            <span className="bg-white text-finder-red px-3 py-1 rounded font-medium">
-              Sign Up
-            </span>
-          </nav>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden text-white hover:bg-finder-red-dark"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-finder-red/70">
-            <nav className="flex flex-col space-y-3 pt-4">
-              <Link 
-                href="#how-it-works" 
-                className="hover:bg-finder-red-dark px-3 py-2 rounded transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-8">
+              <Link href="#how-it-works" className="hover:underline hover:text-gray-200 transition-all duration-200 text-sm xl:text-base">
                 How it Works
               </Link>
-              <Link 
-                href="/login" 
-                className="hover:bg-finder-red-dark px-3 py-2 rounded transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
+              <Link href="/login" className="hover:underline hover:text-gray-200 transition-all duration-200 text-sm xl:text-base">
                 Log In
               </Link>
-              <span className="bg-white text-finder-red px-3 py-2 rounded font-medium">
+              <span className="bg-white text-finder-red px-4 py-2 rounded-lg font-medium text-sm xl:text-base shadow-sm hover:shadow-md transition-shadow duration-200">
                 Sign Up
               </span>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden text-white hover:bg-finder-red-dark p-2 rounded-md transition-colors duration-200"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
           </div>
-        )}
+
+          {/* Mobile Dropdown Menu */}
+          {isMenuOpen && (
+            <div className="lg:hidden mt-4 pb-4 border-t border-finder-red-light/30 animate-in slide-in-from-top-2 duration-200">
+              <nav className="flex flex-col space-y-2 pt-4 px-2">
+                <Link 
+                  href="#how-it-works" 
+                  className="hover:bg-finder-red-dark px-4 py-3 rounded-lg transition-colors duration-200 text-sm font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  How it Works
+                </Link>
+                <Link 
+                  href="/login" 
+                  className="hover:bg-finder-red-dark px-4 py-3 rounded-lg transition-colors duration-200 text-sm font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Log In
+                </Link>
+                <div className="bg-white text-finder-red px-4 py-3 rounded-lg font-medium text-sm text-center shadow-sm">
+                  Sign Up
+                </div>
+              </nav>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}

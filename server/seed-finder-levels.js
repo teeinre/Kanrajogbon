@@ -52,7 +52,7 @@ const defaultFinderLevels = [
     minEarnedAmount: "100000.00",
     minJobsCompleted: 100,
     minReviewPercentage: 95,
-    icon: "Crown",
+    icon: "Dragon",
     color: "#f59e0b",
     order: 5,
     isActive: true

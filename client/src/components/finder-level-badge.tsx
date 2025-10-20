@@ -1,7 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
-import { Users } from "lucide-react";
+import { pathfinderLevels, PathfinderLevel } from "./PathfinderLevelIcons";
 
 interface FinderLevelBadgeProps {
   completedJobs: number;
@@ -9,84 +8,54 @@ interface FinderLevelBadgeProps {
   className?: string;
 }
 
-interface FinderLevel {
-  id: string;
-  name: string;
-  minJobsCompleted: number;
-  minRating: string;
-  minReviewPercentage?: number;
-  badgeEmoji: string;
-  badgeIcon?: string;
-  icon?: string;
-  color: string;
-  order: number;
-  isActive: boolean;
-}
+// Static level requirements based on the seed data
+const levelRequirements = [
+  { name: 'Novice', minJobs: 0, minRating: 0, order: 1 },
+  { name: 'Pathfinder', minJobs: 2, minRating: 4.0, order: 2 },
+  { name: 'Seeker', minJobs: 10, minRating: 4.2, order: 3 },
+  { name: 'Meister', minJobs: 25, minRating: 4.5, order: 4 },
+  { name: 'GrandMeister', minJobs: 50, minRating: 4.8, order: 5 }
+];
 
 export function FinderLevelBadge({ completedJobs, averageRating = 0, className }: FinderLevelBadgeProps) {
-  const { data: levels = [] } = useQuery<FinderLevel[]>({
-    queryKey: ["/api/admin/finder-levels"],
-  });
-
   const getFinderLevel = (jobs: number, rating: number) => {
-    if (levels.length === 0) {
-      return {
-        level: "Novice",
-        icon: "users",
-        color: "#9ca3af"
-      };
-    }
-
-    // Filter only active levels and sort by order descending
-    const sortedLevels = levels
-      .filter(level => level.isActive)
-      .sort((a, b) => b.order - a.order);
-
-    if (sortedLevels.length === 0) {
-      return {
-        level: "Novice",
-        icon: "users",
-        color: "#9ca3af"
-      };
-    }
-
+    // Sort requirements by order descending to find highest qualifying level
+    const sortedRequirements = [...levelRequirements].sort((a, b) => b.order - a.order);
+    
     // Find the highest level the finder qualifies for
-    for (const level of sortedLevels) {
-      const meetsJobRequirement = jobs >= (level.minJobsCompleted || 0);
-      
-      // Support both minRating and minReviewPercentage fields
-      const minRatingValue = level.minRating 
-        ? parseFloat(level.minRating) 
-        : (level.minReviewPercentage ? level.minReviewPercentage / 20 : 0); // Convert percentage to 5-star scale
-      
-      const meetsRatingRequirement = rating >= minRatingValue;
+    for (const requirement of sortedRequirements) {
+      const meetsJobRequirement = jobs >= requirement.minJobs;
+      const meetsRatingRequirement = rating >= requirement.minRating;
 
       if (meetsJobRequirement && meetsRatingRequirement) {
-        return {
-          level: level.name,
-          icon: level.badgeIcon || level.icon || "users",
-          color: level.color || "#9ca3af"
-        };
+        const levelData = pathfinderLevels.find(l => l.name === requirement.name);
+        if (levelData) {
+          return {
+            level: levelData.name,
+            emoji: levelData.badge_emoji,
+            color: levelData.color
+          };
+        }
       }
     }
 
-    // Default to lowest level
-    const lowestLevel = sortedLevels[sortedLevels.length - 1];
+    // Default to Novice level
+    const noviceLevel = pathfinderLevels.find(l => l.name === 'Novice');
     return {
-      level: lowestLevel.name,
-      icon: lowestLevel.badgeIcon || lowestLevel.icon || "users",
-      color: lowestLevel.color || "#9ca3af"
+      level: noviceLevel?.name || 'Novice',
+      emoji: noviceLevel?.badge_emoji || '🍃',
+      color: noviceLevel?.color || '#10b981'
     };
   };
 
-  const { level, icon, color } = getFinderLevel(completedJobs, averageRating);
+  const { level, emoji, color } = getFinderLevel(completedJobs, averageRating);
 
   return (
     <Badge 
       className={`font-semibold px-3 py-1.5 ${className} flex items-center gap-2 border-0`}
       style={{ backgroundColor: color, color: 'white' }}
     >
-      <Users className="w-4 h-4" />
+      <span className="text-sm">{emoji}</span>
       <span>{level}</span>
     </Badge>
   );

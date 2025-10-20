@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { pathfinderLevels, PathfinderLevelData } from "@/components/PathfinderLevelIcons";
 import AdminHeader from "@/components/admin-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +34,25 @@ const iconMap = {
   'Crown': Crown,
 };
 
+// Convert PathfinderLevelData to FinderLevel format for admin display
+const convertToFinderLevels = (pathfinderData: PathfinderLevelData[]): FinderLevel[] => {
+  return pathfinderData.map((level, index) => ({
+    id: `static-${level.name.toLowerCase()}`,
+    name: level.name,
+    description: level.description,
+    minEarnedAmount: level.minEarnedAmount?.toString() || "0",
+    minJobsCompleted: level.minJobsCompleted || 0,
+    minReviewPercentage: level.minRating ? level.minRating * 20 : 0, // Convert 5-star rating to percentage
+    icon: level.badge_icon || 'User',
+    iconUrl: "",
+    color: level.color,
+    order: index + 1,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+};
+
 export default function AdminFinderLevels() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingLevel, setEditingLevel] = useState<FinderLevel | null>(null);
@@ -52,54 +70,39 @@ export default function AdminFinderLevels() {
   });
 
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: levels = [], isLoading } = useQuery<FinderLevel[]>({
-    queryKey: ["/api/admin/finder-levels"],
-  });
+  // Use static data instead of database queries
+  const levels = convertToFinderLevels(pathfinderLevels);
+  const isLoading = false;
 
-  const createMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      return await apiRequest("/api/admin/finder-levels", { method: "POST", body: JSON.stringify(data) });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/finder-levels"] });
-      toast({ title: "Success", description: "Finder level created successfully" });
-      resetForm();
-      setIsCreating(false);
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  });
+  // Mock functions for create/update/delete operations
+  const handleCreate = async (data: typeof formData) => {
+    toast({ 
+      title: "Info", 
+      description: "This is a read-only view of static finder levels. Changes are not persisted.", 
+      variant: "default" 
+    });
+    resetForm();
+    setIsCreating(false);
+  };
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      return await apiRequest(`/api/admin/finder-levels/${id}`, { method: "PUT", body: JSON.stringify(data) });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/finder-levels"] });
-      toast({ title: "Success", description: "Finder level updated successfully" });
-      resetForm();
-      setEditingLevel(null);
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  });
+  const handleUpdate = async (id: string, data: typeof formData) => {
+    toast({ 
+      title: "Info", 
+      description: "This is a read-only view of static finder levels. Changes are not persisted.", 
+      variant: "default" 
+    });
+    resetForm();
+    setEditingLevel(null);
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest(`/api/admin/finder-levels/${id}`, { method: "DELETE" });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/finder-levels"] });
-      toast({ title: "Success", description: "Finder level deleted successfully" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  });
+  const handleDelete = async (id: string) => {
+    toast({ 
+      title: "Info", 
+      description: "This is a read-only view of static finder levels. Changes are not persisted.", 
+      variant: "default" 
+    });
+  };
 
   const resetForm = () => {
     setFormData({
@@ -132,7 +135,7 @@ export default function AdminFinderLevels() {
     setEditingLevel(level);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const cleanedData = {
@@ -143,15 +146,15 @@ export default function AdminFinderLevels() {
     };
 
     if (editingLevel) {
-      updateMutation.mutate({ id: editingLevel.id, data: cleanedData });
+      await handleUpdate(editingLevel.id, cleanedData);
     } else {
-      createMutation.mutate(cleanedData);
+      await handleCreate(cleanedData);
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDeleteLevel = (id: string) => {
     if (confirm("Are you sure you want to delete this finder level?")) {
-      deleteMutation.mutate(id);
+      handleDelete(id);
     }
   };
 
@@ -398,13 +401,10 @@ export default function AdminFinderLevels() {
                 <div className="flex gap-3 pt-4 border-t">
                   <Button
                     type="submit"
-                    disabled={createMutation.isPending || updateMutation.isPending}
+                    disabled={false}
                     className="flex-1 bg-blue-600 hover:bg-blue-700"
                   >
-                    {(createMutation.isPending || updateMutation.isPending) 
-                      ? 'Saving...' 
-                      : (editingLevel ? 'Update' : 'Create')
-                    }
+                    {editingLevel ? 'Update' : 'Create'}
                   </Button>
                   <Button
                     type="button"
@@ -467,7 +467,7 @@ export default function AdminFinderLevels() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(level.id)}
+                        onClick={() => handleDeleteLevel(level.id)}
                         className="p-2 text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="w-3 h-3" />

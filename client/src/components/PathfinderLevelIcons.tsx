@@ -77,15 +77,23 @@ export const PathfinderLevelIcon: React.FC<PathfinderLevelIconProps> = ({
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <div 
-        className={`${sizeClasses[size]} rounded-full flex items-center justify-center border-2 shadow-sm`}
+        className={`${sizeClasses[size]} rounded-full flex items-center justify-center border-2 shadow-lg`}
         style={{ 
-          backgroundColor: `${levelData.color}20`,
+          backgroundColor: levelData.name === 'GrandMeister' ? `${levelData.color}30` : `${levelData.color}20`,
           borderColor: levelData.color,
-          color: levelData.color
+          color: levelData.color,
+          boxShadow: levelData.name === 'GrandMeister' ? `0 4px 12px ${levelData.color}40` : undefined
         }}
         title={levelData.description}
       >
-        <span className="text-lg">{levelData.badge_emoji}</span>
+        <span 
+          className={levelData.name === 'GrandMeister' ? "text-xl font-bold" : "text-lg"}
+          style={{
+            filter: levelData.name === 'GrandMeister' ? 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3))' : undefined
+          }}
+        >
+          {levelData.badge_emoji}
+        </span>
       </div>
       {showLabel && (
         <span className="text-xs font-medium mt-1 text-center" style={{ color: levelData.color }}>

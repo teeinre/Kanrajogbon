@@ -252,7 +252,7 @@ export default function Landing() {
 
             <div className="text-center mt-12">
               <p className="text-lg text-gray-600 mb-8">
-                Join us today and become part of Nigeria's fastest-growing finder community
+                Join us and become part of Nigeria's fastest-growing finder community
               </p>
               <Link href="/register/finder">
                 <Button size="lg" className="bg-finder-red hover:bg-finder-red-dark text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">
