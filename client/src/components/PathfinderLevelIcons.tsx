@@ -41,8 +41,8 @@ export const pathfinderLevels: PathfinderLevelData[] = [
   },
   {
     name: 'GrandMeister',
-    badge_icon: 'dragon',
-    badge_emoji: '🐉',
+    badge_icon: 'crown',
+    badge_emoji: '👑',
     color: '#000000',
     description: 'The Legendary Elite - Pinnacle of FinderMeister achievement'
   }

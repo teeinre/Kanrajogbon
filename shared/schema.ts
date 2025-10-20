@@ -239,7 +239,7 @@ export const finderLevels = pgTable("finder_levels", {
   monthlyTokens: integer("monthly_tokens").default(20), // Monthly token allocation
   tokenBonusPerProposal: integer("token_bonus_per_proposal").default(0), // Extra tokens per accepted proposal
   vipInvitationsPerMonth: integer("vip_invitations_per_month").default(0), // VIP invitation quota
-  badgeIcon: text("badge_icon"), // Icon identifier (e.g., 'leaf', 'compass', 'eye', 'torch', 'dragon')
+  badgeIcon: text("badge_icon"), // Icon identifier (e.g., 'leaf', 'compass', 'eye', 'torch', 'crown')
   badgeEmoji: text("badge_emoji"), // Emoji representation
   color: text("color"), // hex color code
   order: integer("order").notNull(), // display order
