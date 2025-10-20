@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Search, Star, Handshake, CheckCircle, Shield, Users } from "lucide-react";
 import logoImage from "@assets/findermeister logo real_1756395091374.jpg";
+import PathfinderLevelIconsDefault from "@/components/PathfinderLevelIcons";
 
 export default function Landing() {
   const { isAuthenticated, user } = useAuth();
+  const { pathfinderLevels } = PathfinderLevelIconsDefault;
 
   if (isAuthenticated && user) {
     if (user.role === 'client') {
@@ -233,19 +235,16 @@ export default function Landing() {
             </div>
 
             <div className="flex flex-wrap justify-center gap-6 lg:gap-8">
-              {[
-                { level: 'Novice', color: 'bg-gray-400' },
-                { level: 'Pathfinder', color: 'bg-blue-500' },
-                { level: 'Seeker', color: 'bg-green-500' },
-                { level: 'Meister', color: 'bg-purple-500' },
-                { level: 'GrandMeister', color: 'bg-finder-red' }
-              ].map((item, index) => (
-                <div key={item.level} className="text-center group">
-                  <div className={`w-16 h-16 lg:w-20 lg:h-20 ${item.color} rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-shadow`}>
-                    <Users className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+              {pathfinderLevels.map((level, index) => (
+                <div key={level.name} className="text-center group">
+                  <div 
+                    className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:shadow-xl transition-shadow"
+                    style={{ backgroundColor: level.color }}
+                  >
+                    <span className="text-2xl lg:text-3xl">{level.badge_emoji}</span>
                   </div>
                   <h3 className="font-semibold text-gray-900 text-sm lg:text-base">
-                    {item.level}
+                    {level.name}
                   </h3>
                 </div>
               ))}
@@ -253,7 +252,7 @@ export default function Landing() {
 
             <div className="text-center mt-12">
               <p className="text-lg text-gray-600 mb-8">
-                Join our today and become part of Nigeria's fastest-growing finder community
+                Join us today and become part of Nigeria's fastest-growing finder community
               </p>
               <Link href="/register/finder">
                 <Button size="lg" className="bg-finder-red hover:bg-finder-red-dark text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">
