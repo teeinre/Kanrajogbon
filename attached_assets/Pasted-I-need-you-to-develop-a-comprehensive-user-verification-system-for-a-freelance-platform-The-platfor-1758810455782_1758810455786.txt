@@ -1,0 +1,125 @@
+I need you to develop a comprehensive user verification system for a freelance platform. The platform has two types of users: "Clients" and "Freelancers" (referred to as "Finds"). The core functionality of this system is to verify the identity of these users using government-issued documents. The verification requirement should be a configurable setting managed by an administrator. Crucially, the verification process will be handled by a human administrator or staff member, not a third-party AI service.
+
+Core Requirements:
+
+Admin Dashboard Feature:
+
+Create an administrator setting to enable or disable the verification requirement.
+
+This setting should be a simple toggle switch (e.g., "Verification Required: ON/OFF").
+
+When the setting is "ON," all other verification-related requirements and user flows must be active.
+
+When the setting is "OFF," all verification checks should be bypassed, allowing users to post "finds" (for clients) or apply to "finds" (for freelancers) without verification.
+
+User Verification Flow (when enabled):
+
+Trigger: If the admin setting is "ON," both Clients and Freelancers must complete verification before they can perform key actions.
+
+Clients: Must be verified before they can post a new "find" (job/project).
+
+Freelancers (Finds): Must be verified before they can apply to a "find."
+
+User Interface:
+
+Design a clear and user-friendly interface for the verification process.
+
+The process should guide the user through the necessary steps:
+
+Document Selection: Provide options for users to select their type of government-issued ID:
+
+National ID card
+
+Passport
+
+Voters card
+
+Document Upload: Allow users to securely upload high-quality images of the front and back of their selected ID.
+
+Selfie Capture: Implement a live photo capture (selfie) to match the user's face with the photo on the uploaded ID.
+
+Admin/Staff Verification Portal:
+
+Create a dedicated section within the admin dashboard for managing verification requests.
+
+This portal should display a list of all users who have submitted documents for verification.
+
+For each submission, the admin/staff member should be able to:
+
+View the user's profile information (name, etc.).
+
+View the uploaded images of the selected government-issued ID (front and back).
+
+View the uploaded selfie.
+
+Compare the face in the selfie with the face in the ID photo.
+
+Check for clarity, validity, and consistency of the documents.
+
+Action Buttons: Provide clear buttons for the admin to:
+
+"Verify": Mark the user's account as verified.
+
+"Reject": Deny the verification request.
+
+Rejection Reason: If a request is rejected, the admin should be prompted to provide a mandatory reason for the rejection (e.g., "Image is blurry," "Faces do not match," "Document is expired"). This reason should be communicated to the user.
+
+System Responses and User Communication:
+
+Verification Status: Create a clear verification status for each user profile:
+
+Not Verified: The user has not started the process or has failed it.
+
+Pending: The user has submitted documents, and they are awaiting manual review by an admin.
+
+Verified: The user has been successfully verified by an admin.
+
+Notifications:
+
+Send an email and in-app notification to users informing them they must verify their account to continue.
+
+Notify users when their submission is in "Pending" status.
+
+Notify users of the final status of their verification request (e.g., "Your verification is complete," "Verification failed: [Reason provided by admin]").
+
+If verification fails, provide the admin's reason and clear instructions for re-submission.
+
+Security and Privacy:
+
+Ensure all user data (ID photos, selfies, personal information) is handled with the highest level of security.
+
+Explicitly mention compliance with data privacy regulations (e.g., GDPR, NDPR).
+
+Restrict access to the verification portal to authorized staff only.
+
+Store sensitive data securely and encrypt it both at rest and in transit.
+
+Implement a clear policy for data retention and deletion.
+
+Acceptance Criteria:
+
+The admin can successfully toggle the verification requirement on and off from a dedicated dashboard.
+
+When verification is ON, clients cannot post "finds" and freelancers cannot apply to "finds" until they are verified.
+
+The user-facing verification process is intuitive and guides the user through document submission.
+
+A clear and secure admin portal exists for reviewing and approving/rejecting verification requests.
+
+The admin can provide a specific rejection reason that is communicated back to the user.
+
+Users receive timely and informative notifications about their verification status throughout the process.
+
+
+
+
+
+
+
+
+
+
+
+
+Tools
+
