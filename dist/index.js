@@ -8234,7 +8234,24 @@ async function registerRoutes(app2) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const levels = await storage.getFinderLevels();
-      res.json(levels);
+      const frontendLevels = levels.map((level) => ({
+        id: level.id,
+        name: level.name,
+        description: level.description,
+        minEarnedAmount: level.minEarnedAmount,
+        minJobsCompleted: level.minJobsCompleted,
+        minReviewPercentage: level.minRating ? Math.round(parseFloat(level.minRating.toString()) * 20) : 0,
+        // Convert 5-star rating to percentage
+        icon: level.badgeIcon || "User",
+        iconUrl: "",
+        // Not stored in database
+        color: level.color,
+        order: level.order,
+        isActive: level.isActive,
+        createdAt: level.createdAt,
+        updatedAt: level.updatedAt
+      }));
+      res.json(frontendLevels);
     } catch (error) {
       console.error("Get finder levels error:", error);
       res.status(500).json({ message: "Failed to fetch finder levels" });
@@ -8245,7 +8262,22 @@ async function registerRoutes(app2) {
       if (req.user.role !== "admin") {
         return res.status(403).json({ message: "Admin access required" });
       }
-      const level = await storage.createFinderLevel(req.body);
+      const frontendData = req.body;
+      const dbData = {
+        name: frontendData.name,
+        description: frontendData.description,
+        minEarnedAmount: frontendData.minEarnedAmount,
+        minJobsCompleted: frontendData.minJobsCompleted,
+        minRating: frontendData.minReviewPercentage ? (frontendData.minReviewPercentage / 20).toString() : "0",
+        // Convert percentage to 5-star rating
+        badgeIcon: frontendData.icon,
+        badgeEmoji: "",
+        // Default empty, can be added later
+        color: frontendData.color,
+        order: frontendData.order,
+        isActive: frontendData.isActive
+      };
+      const level = await storage.createFinderLevel(dbData);
       res.json(level);
     } catch (error) {
       console.error("Create finder level error:", error);
@@ -8258,7 +8290,22 @@ async function registerRoutes(app2) {
         return res.status(403).json({ message: "Admin access required" });
       }
       const { id } = req.params;
-      const level = await storage.updateFinderLevel(id, req.body);
+      const frontendData = req.body;
+      const dbData = {
+        name: frontendData.name,
+        description: frontendData.description,
+        minEarnedAmount: frontendData.minEarnedAmount,
+        minJobsCompleted: frontendData.minJobsCompleted,
+        minRating: frontendData.minReviewPercentage ? (frontendData.minReviewPercentage / 20).toString() : "0",
+        // Convert percentage to 5-star rating
+        badgeIcon: frontendData.icon,
+        badgeEmoji: "",
+        // Default empty, can be added later
+        color: frontendData.color,
+        order: frontendData.order,
+        isActive: frontendData.isActive
+      };
+      const level = await storage.updateFinderLevel(id, dbData);
       if (!level) {
         return res.status(404).json({ message: "Finder level not found" });
       }
@@ -8295,8 +8342,9 @@ async function registerRoutes(app2) {
           description: "New finders just starting their journey on FinderMeister",
           minEarnedAmount: "0.00",
           minJobsCompleted: 0,
-          minReviewPercentage: 0,
-          icon: "User",
+          minRating: "0.00",
+          badgeIcon: "User",
+          badgeEmoji: "\u{1F331}",
           color: "#6b7280",
           order: 1,
           isActive: true
@@ -8306,8 +8354,9 @@ async function registerRoutes(app2) {
           description: "Experienced finders who have completed multiple successful finds",
           minEarnedAmount: "5000.00",
           minJobsCompleted: 5,
-          minReviewPercentage: 80,
-          icon: "Navigation",
+          minRating: "4.00",
+          badgeIcon: "Navigation",
+          badgeEmoji: "\u{1F9ED}",
           color: "#10b981",
           order: 2,
           isActive: true
@@ -8317,8 +8366,9 @@ async function registerRoutes(app2) {
           description: "Skilled finders with a proven track record of quality work",
           minEarnedAmount: "15000.00",
           minJobsCompleted: 15,
-          minReviewPercentage: 85,
-          icon: "Search",
+          minRating: "4.25",
+          badgeIcon: "Search",
+          badgeEmoji: "\u{1F50D}",
           color: "#3b82f6",
           order: 3,
           isActive: true
@@ -8328,8 +8378,9 @@ async function registerRoutes(app2) {
           description: "Expert finders with exceptional performance and client satisfaction",
           minEarnedAmount: "50000.00",
           minJobsCompleted: 50,
-          minReviewPercentage: 90,
-          icon: "Award",
+          minRating: "4.50",
+          badgeIcon: "Award",
+          badgeEmoji: "\u{1F3C6}",
           color: "#8b5cf6",
           order: 4,
           isActive: true
@@ -8339,8 +8390,9 @@ async function registerRoutes(app2) {
           description: "Elite finders at the pinnacle of expertise and achievement",
           minEarnedAmount: "100000.00",
           minJobsCompleted: 100,
-          minReviewPercentage: 95,
-          icon: "Crown",
+          minRating: "4.75",
+          badgeIcon: "Crown",
+          badgeEmoji: "\u{1F451}",
           color: "#f59e0b",
           order: 5,
           isActive: true
