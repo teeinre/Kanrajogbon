@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FinderLevelBadge } from "@/components/finder-level-badge";
+import { VerificationStatusBadge } from "@/components/verification-status-badge";
 import AdminHeader from "@/components/admin-header";
 import { ArrowLeft, User, Star, Award, Clock, DollarSign, CheckCircle, XCircle } from "lucide-react";
 import type { Finder } from "@shared/schema";
@@ -143,15 +144,11 @@ export default function FinderProfileView() {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Verified Status</p>
                   <div className="flex items-center gap-2">
-                    {finderData.user?.isVerified ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-finder-red" />
-                    )}
-                    <span className={finderData.user?.isVerified ? 'text-green-600' : 'text-finder-red'}>
-                      {finderData.user?.isVerified ? 'Verified' : 'Unverified'}
-                    </span>
-                  </div>
+                <VerificationStatusBadge 
+                  status={finderData.user?.identityVerificationStatus} 
+                  className="font-semibold"
+                />
+              </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Availability</p>

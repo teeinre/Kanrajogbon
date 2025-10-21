@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { ClientVerificationStatus } from "@/components/client-verification-status";
+import { VerificationStatusBadge } from "@/components/verification-status-badge";
 import { 
   ArrowLeft, 
   User, 
@@ -34,7 +34,8 @@ import {
   Loader2,
   FileText,
   Clock,
-  Star
+  Star,
+  Shield
 } from "lucide-react";
 import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -339,10 +340,10 @@ export default function ClientProfile() {
                   </div>
                 </div>
 
-                <Badge className="text-white border-0 px-4 py-2 mb-8 shadow-lg" style={{ background: "linear-gradient(to right, hsl(1, 81%, 53%), hsl(1, 71%, 43%))" }}>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Verified Client
-                </Badge>
+                <VerificationStatusBadge 
+                  status={displayUser?.identityVerificationStatus} 
+                  className="mb-8"
+                />
 
                 <div className="space-y-4 text-sm">
                   <div className="flex items-center justify-center bg-slate-50/80 rounded-full py-2 px-4">
@@ -408,7 +409,22 @@ export default function ClientProfile() {
           {/* Right Column - Profile Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Verification Status */}
-            <ClientVerificationStatus user={displayUser} />
+            <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(to right, hsl(1, 81%, 53%), hsl(1, 71%, 43%))" }}>
+                    <Shield className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Verification Status</h3>
+                    <VerificationStatusBadge 
+                      status={displayUser?.identityVerificationStatus} 
+                      className="text-sm font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
             
             {/* Personal Information */}
             <Card className="bg-white/80 backdrop-blur-xl border-white/20 shadow-2xl shadow-slate-200/25 hover:shadow-3xl transition-all duration-500">

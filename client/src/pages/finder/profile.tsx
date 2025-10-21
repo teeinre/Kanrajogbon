@@ -11,10 +11,11 @@ import { FinderHeader } from "@/components/finder-header";
 import { FinderLevelBadge } from "@/components/finder-level-badge";
 import VerificationStatusCard from "@/components/verification-status";
 import { FinderVerificationStatus } from "@/components/finder-verification-status";
+import { VerificationStatusBadge } from "@/components/verification-status-badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Save, Award, Star, User } from "lucide-react";
+import { Save, Award, Star, User, MapPin, Clock, DollarSign, MessageCircle, Edit, Loader2, RefreshCw } from "lucide-react";
 import type { Finder, Category } from "@shared/schema";
 
 export default function FinderProfile() {
@@ -32,7 +33,15 @@ export default function FinderProfile() {
 
   const { data: finder, isLoading } = useQuery<any>({
     queryKey: ['/api/finder/profile'],
-    enabled: !!user
+    enabled: !!user,
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+  });
+
+  // Fetch real-time verification status
+  const { data: verificationStatus, refetch: refetchVerification } = useQuery<any>({
+    queryKey: ['/api/verification/status'],
+    enabled: !!user,
+    refetchInterval: 15000, // Refetch every 15 seconds for faster verification updates
   });
 
   // Fetch categories for dropdown
@@ -62,6 +71,7 @@ export default function FinderProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/finder/profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/verification/status'] });
       toast({
         title: "Success",
         description: "Your profile has been updated successfully.",
@@ -112,6 +122,48 @@ export default function FinderProfile() {
     };
 
     updateProfileMutation.mutate(payload);
+  };
+
+  // Manual refresh function for verification status
+  const handleRefreshVerification = async () => {
+    try {
+      await refetchVerification();
+      toast({
+        title: "Status Updated",
+        description: "Verification status refreshed successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh verification status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to update verification status (for admin/testing purposes)
+  const handleUpdateVerificationStatus = async (status: 'verified' | 'pending' | 'rejected') => {
+    try {
+      await apiRequest('/api/verification/status', {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+      
+      // Refresh verification status after update
+      await refetchVerification();
+      queryClient.invalidateQueries({ queryKey: ['/api/finder/profile'] });
+      
+      toast({
+        title: "Verification Updated",
+        description: `Verification status updated to ${status}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update verification status.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Fetch finder levels for progression display
@@ -390,13 +442,58 @@ export default function FinderProfile() {
                   <div className="text-sm text-gray-600">Average Rating</div>
                 </div>
                 <div className="text-center">
-                  <Badge variant={finder.user?.isVerified ? "default" : "secondary"}>
-                    {finder.user?.isVerified ? "Verified" : "Unverified"}
-                  </Badge>
-                  <div className="text-sm text-gray-600 mt-1">Status</div>
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      verificationStatus?.verification?.status === 'verified' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {verificationStatus?.verification?.status === 'verified' ? 'Verified' : 'Unverified'}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRefreshVerification}
+                      className="p-1 h-6 w-6"
+                      title="Refresh verification status"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="text-sm text-gray-600">Verification Status</div>
                 </div>
               </div>
             )}
+
+            {/* Simple Verification Status Display */}
+              {verificationStatus && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${
+                        verificationStatus.verification?.status === 'verified' 
+                          ? 'bg-green-500' 
+                          : 'bg-red-500'
+                      }`}></div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">Verification Status</h4>
+                        <div className="text-lg font-bold">
+                          {verificationStatus.verification?.status === 'verified' ? 'Verified' : 'Unverified'}
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefreshVerification}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Refresh
+                    </Button>
+                  </div>
+                </div>
+              )}
 
             {/* Form Fields */}
             <div className="space-y-6">
