@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FinderHeader } from "@/components/finder-header";
 import { FinderLevelBadge } from "@/components/finder-level-badge";
 import VerificationStatusCard from "@/components/verification-status";
+import { FinderVerificationStatus } from "@/components/finder-verification-status";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -191,7 +192,12 @@ export default function FinderProfile() {
       <FinderHeader currentPage="profile" />
 
       <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6">
-        {/* Verification Status */}
+        {/* Dynamic Verification Status */}
+        <div className="mb-8">
+          <FinderVerificationStatus />
+        </div>
+
+        {/* Legacy Verification Status (keeping for backward compatibility) */}
         <div className="mb-8">
           <VerificationStatusCard />
         </div>

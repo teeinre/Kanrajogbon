@@ -56,8 +56,20 @@ const AuthService = {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Registration failed');
+      let errorMessage = 'Registration failed';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || 'Registration failed';
+      } catch (parseError) {
+        // If response is not JSON, try to get text
+        try {
+          const errorText = await response.text();
+          errorMessage = errorText || `Registration failed (Status: ${response.status})`;
+        } catch {
+          errorMessage = `Registration failed (Status: ${response.status})`;
+        }
+      }
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
@@ -75,8 +87,20 @@ const AuthService = {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
+      let errorMessage = 'Login failed';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || 'Login failed';
+      } catch (parseError) {
+        // If response is not JSON, try to get text
+        try {
+          const errorText = await response.text();
+          errorMessage = errorText || `Login failed (Status: ${response.status})`;
+        } catch {
+          errorMessage = `Login failed (Status: ${response.status})`;
+        }
+      }
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
@@ -100,7 +124,20 @@ const AuthService = {
         // Token is invalid or expired, clear it
         this.clearToken();
       }
-      const error = new Error('Failed to get current user');
+      let errorMessage = 'Failed to get current user';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || 'Failed to get current user';
+      } catch (parseError) {
+        // If response is not JSON, try to get text
+        try {
+          const errorText = await response.text();
+          errorMessage = errorText || `Failed to get current user (Status: ${response.status})`;
+        } catch {
+          errorMessage = `Failed to get current user (Status: ${response.status})`;
+        }
+      }
+      const error = new Error(errorMessage);
       (error as any).status = response.status;
       throw error;
     }
@@ -264,8 +301,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        let errorMessage = 'Login failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || 'Login failed';
+        } catch (parseError) {
+          // If response is not JSON, try to get text
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || `Login failed (Status: ${response.status})`;
+          } catch {
+            errorMessage = `Login failed (Status: ${response.status})`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

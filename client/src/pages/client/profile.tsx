@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { ClientVerificationStatus } from "@/components/client-verification-status";
 import { 
   ArrowLeft, 
   User, 
@@ -406,6 +407,9 @@ export default function ClientProfile() {
 
           {/* Right Column - Profile Details */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Verification Status */}
+            <ClientVerificationStatus user={displayUser} />
+            
             {/* Personal Information */}
             <Card className="bg-white/80 backdrop-blur-xl border-white/20 shadow-2xl shadow-slate-200/25 hover:shadow-3xl transition-all duration-500">
               <CardHeader className="pb-6">

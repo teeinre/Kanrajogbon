@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { pathfinderLevels, PathfinderLevelData } from "@/components/PathfinderLevelIcons";
 import AdminHeader from "@/components/admin-header";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Plus, Edit, Trash2, Crown, Award, Navigation, Search, User, CheckCircle, Star, X } from "lucide-react";
 
 interface FinderLevel {
@@ -70,38 +72,84 @@ export default function AdminFinderLevels() {
   });
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Use static data instead of database queries
-  const levels = convertToFinderLevels(pathfinderLevels);
-  const isLoading = false;
+  // Use actual API queries instead of static data
+  const { data: levels = [], isLoading } = useQuery({
+    queryKey: ['admin', 'finder-levels'],
+    queryFn: () => apiRequest('/api/admin/finder-levels')
+  });
 
-  // Mock functions for create/update/delete operations
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/admin/finder-levels', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'finder-levels'] });
+      resetForm();
+      setIsCreating(false);
+      toast({ title: "Success", description: "Finder level created successfully" });
+    },
+    onError: (error: any) => {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => 
+      apiRequest(`/api/admin/finder-levels/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'finder-levels'] });
+      resetForm();
+      setEditingLevel(null);
+      toast({ title: "Success", description: "Finder level updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => 
+      apiRequest(`/api/admin/finder-levels/${id}`, {
+        method: 'DELETE'
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'finder-levels'] });
+      toast({ title: "Success", description: "Finder level deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    }
+  });
+
   const handleCreate = async (data: typeof formData) => {
-    toast({ 
-      title: "Info", 
-      description: "This is a read-only view of static finder levels. Changes are not persisted.", 
-      variant: "default" 
-    });
-    resetForm();
-    setIsCreating(false);
+    await createMutation.mutateAsync(data);
   };
 
   const handleUpdate = async (id: string, data: typeof formData) => {
-    toast({ 
-      title: "Info", 
-      description: "This is a read-only view of static finder levels. Changes are not persisted.", 
-      variant: "default" 
-    });
-    resetForm();
-    setEditingLevel(null);
+    await updateMutation.mutateAsync({ id, data });
   };
 
   const handleDelete = async (id: string) => {
-    toast({ 
-      title: "Info", 
-      description: "This is a read-only view of static finder levels. Changes are not persisted.", 
-      variant: "default" 
-    });
+    await deleteMutation.mutateAsync(id);
+  };
+
+  // Function to seed default finder levels
+  const handleSeedDefaults = async () => {
+    try {
+      await apiRequest('/api/admin/finder-levels/seed', {
+        method: 'POST'
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'finder-levels'] });
+      toast({ title: "Success", description: "Default finder levels seeded successfully" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message || "Failed to seed default levels" });
+    }
   };
 
   const resetForm = () => {
@@ -160,12 +208,14 @@ export default function AdminFinderLevels() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <AdminHeader currentPage="finder-levels" />
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-2">Loading...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <AdminHeader currentPage="finder-levels" />
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-finder-red mx-auto"></div>
+              <p className="text-gray-600 mt-4">Loading finder levels...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -191,13 +241,23 @@ export default function AdminFinderLevels() {
             </div>
 
             {!isCreating && !editingLevel && (
-              <Button 
-                onClick={() => setIsCreating(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Level
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSeedDefaults}
+                  variant="outline"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  <Award className="w-4 h-4 mr-2" />
+                  Seed Defaults
+                </Button>
+                <Button 
+                  onClick={() => setIsCreating(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Level
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -503,11 +563,17 @@ export default function AdminFinderLevels() {
           <div className="text-center py-12">
             <Award className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No finder levels yet</h3>
-            <p className="text-gray-500 mb-4">Create your first finder level to get started.</p>
-            <Button onClick={() => setIsCreating(true)} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Create First Level
-            </Button>
+            <p className="text-gray-500 mb-4">Create your first finder level or seed default levels to get started.</p>
+            <div className="flex gap-4 justify-center">
+              <Button onClick={() => setIsCreating(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Create First Level
+              </Button>
+              <Button onClick={handleSeedDefaults} variant="outline">
+                <Award className="w-4 h-4 mr-2" />
+                Seed Default Levels
+              </Button>
+            </div>
           </div>
         )}
       </div>

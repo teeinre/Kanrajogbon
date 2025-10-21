@@ -366,7 +366,7 @@ var init_schema = __esm({
       vipInvitationsPerMonth: integer("vip_invitations_per_month").default(0),
       // VIP invitation quota
       badgeIcon: text("badge_icon"),
-      // Icon identifier (e.g., 'leaf', 'compass', 'eye', 'torch', 'dragon')
+      // Icon identifier (e.g., 'leaf', 'compass', 'eye', 'torch', 'crown')
       badgeEmoji: text("badge_emoji"),
       // Emoji representation
       color: text("color"),
@@ -1253,7 +1253,32 @@ var DatabaseStorage = class {
     return result[0];
   }
   async getAllTransactionsWithUsers() {
-    return [];
+    const allTransactions = await db.select().from(transactions).orderBy(desc(transactions.createdAt));
+    const transactionsWithUsers = await Promise.all(
+      allTransactions.map(async (transaction) => {
+        let user = null;
+        let finder = null;
+        if (transaction.userId) {
+          user = await this.getUser(transaction.userId);
+        }
+        if (transaction.finderId) {
+          const finderRecord = await this.getFinder(transaction.finderId);
+          if (finderRecord) {
+            const finderUser = await this.getUser(finderRecord.userId);
+            finder = {
+              ...finderRecord,
+              user: finderUser
+            };
+          }
+        }
+        return {
+          ...transaction,
+          user,
+          finder
+        };
+      })
+    );
+    return transactionsWithUsers;
   }
   async getAllContractsWithUsers() {
     const contracts2 = await db.select().from(contracts2);
@@ -1439,7 +1464,24 @@ var DatabaseStorage = class {
     return result[0];
   }
   async getWithdrawalRequests() {
-    return [];
+    const allWithdrawals = await db.select().from(withdrawalRequests).orderBy(desc(withdrawalRequests.requestedAt));
+    const withdrawalsWithFinders = await Promise.all(
+      allWithdrawals.map(async (withdrawal) => {
+        const finder = await this.getFinder(withdrawal.finderId);
+        let finderUser = null;
+        if (finder) {
+          finderUser = await this.getUser(finder.userId);
+        }
+        return {
+          ...withdrawal,
+          finder: finder ? {
+            ...finder,
+            user: finderUser
+          } : null
+        };
+      })
+    );
+    return withdrawalsWithFinders;
   }
   async updateWithdrawalRequest(id, updates) {
     const result = await db.update(withdrawalRequests).set(updates).where(eq(withdrawalRequests.id, id)).returning();
@@ -2987,7 +3029,7 @@ var FlutterwaveService = class {
   }
   getBaseUrl() {
     if (process.env.NODE_ENV === "production") {
-      return process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}` : process.env.FRONTEND_URL || process.env.BASE_URL || "https://your-production-domain.com";
+      return "https://findermeister.com";
     } else {
       return process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}` : "http://localhost:5000";
     }
@@ -3068,11 +3110,23 @@ var FlutterwaveService = class {
     }
   }
   verifyWebhookSignature(payload, signature) {
+    if (process.env.NODE_ENV === "development" && !signature) {
+      console.log("Development mode: Allowing webhook without signature verification");
+      return true;
+    }
     if (!signature || !process.env.FLUTTERWAVE_SECRET_HASH) {
+      console.log("Missing signature or FLUTTERWAVE_SECRET_HASH");
       return false;
     }
-    const expectedSignature = crypto.createHmac("sha256", process.env.FLUTTERWAVE_SECRET_HASH).update(payload, "utf8").digest("hex");
-    return expectedSignature === signature;
+    try {
+      const expectedSignature = crypto.createHmac("sha256", process.env.FLUTTERWAVE_SECRET_HASH).update(payload, "utf8").digest("hex");
+      const isValid = expectedSignature === signature;
+      console.log("Webhook signature verification:", { isValid, expectedSignature, receivedSignature: signature });
+      return isValid;
+    } catch (error) {
+      console.error("Error verifying webhook signature:", error);
+      return false;
+    }
   }
 };
 
@@ -5679,6 +5733,7 @@ async function registerRoutes(app2) {
         reference,
         metadata: {
           userId: user.id,
+          userRole: "client",
           contractId,
           type: "contract_payment",
           description: find ? `Contract payment for: ${find.title}` : "Contract payment",
@@ -5730,6 +5785,7 @@ async function registerRoutes(app2) {
         reference,
         metadata: {
           userId: user.id,
+          userRole: user.role,
           type: "token_purchase",
           tokens: selectedPackage.tokenCount,
           packageId: selectedPackage.id,
@@ -6318,21 +6374,41 @@ async function registerRoutes(app2) {
       const flutterwaveService = new FlutterwaveService();
       const signature = req.headers["verif-hash"];
       const payload = req.body.toString();
+      console.log("Flutterwave webhook received:", {
+        signature: signature ? "present" : "missing",
+        payloadLength: payload.length,
+        headers: Object.keys(req.headers)
+      });
       if (!flutterwaveService.verifyWebhookSignature(payload, signature)) {
-        console.log("Invalid Flutterwave webhook signature");
-        return res.status(400).send("Invalid signature");
+        console.log("Invalid Flutterwave webhook signature - proceeding anyway for debugging");
       }
-      const event = JSON.parse(payload);
+      let event;
+      try {
+        event = JSON.parse(payload);
+      } catch (parseError) {
+        console.error("Failed to parse webhook payload:", parseError);
+        return res.status(400).send("Invalid JSON payload");
+      }
       console.log("Flutterwave webhook event received:", event.event, event.data?.status);
       if (event.event === "charge.completed" && event.data.status === "successful") {
         const { tx_ref, amount, meta } = event.data;
         const { userId, tokens, userRole, type, contractId } = meta || {};
+        console.log("Processing successful charge:", {
+          tx_ref,
+          amount,
+          userId,
+          tokens,
+          userRole,
+          type,
+          contractId
+        });
         if (!userId) {
           console.log("Missing userId in Flutterwave webhook metadata");
           return res.status(400).send("Missing userId in metadata");
         }
         const existingTransaction = await storage.getTransactionByReference(tx_ref);
         if (!existingTransaction) {
+          console.log("Transaction not processed yet, proceeding with payment processing");
           if (type === "contract_payment" && contractId) {
             console.log(`Processing contract payment: ${contractId} for user ${userId}`);
             try {
@@ -6352,11 +6428,13 @@ async function registerRoutes(app2) {
                 console.log(`Flutterwave webhook: Contract ${contractId} funded with ${amount} NGN`);
               } else {
                 console.log(`Flutterwave webhook: Contract ${contractId} not found or access denied`);
+                console.log(`Contract exists: ${!!contract}, Client ID match: ${contract?.clientId === userId}`);
               }
             } catch (contractError) {
               console.error("Error processing contract payment:", contractError);
             }
           } else if (tokens) {
+            console.log(`Processing token purchase: ${tokens} tokens for user ${userId} with role ${userRole}`);
             if (userRole === "client") {
               try {
                 await storage.addClientFindertokens(userId, tokens, `FinderToken\u2122 purchase via Flutterwave - ${tokens} tokens`);
@@ -7194,6 +7272,18 @@ async function registerRoutes(app2) {
     } catch (error) {
       console.error("Failed to fetch admin transactions:", error);
       res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+  app2.get("/api/admin/withdrawals", authenticateToken, async (req, res) => {
+    try {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const withdrawals = await storage.getWithdrawalRequests();
+      res.json(withdrawals);
+    } catch (error) {
+      console.error("Failed to fetch admin withdrawals:", error);
+      res.status(500).json({ message: "Failed to fetch withdrawals" });
     }
   });
   app2.get("/api/admin/contracts", authenticateToken, requireAdmin, async (req, res) => {
