@@ -29,7 +29,7 @@ import {
   Clock,
   AlertTriangle
 } from "lucide-react";
-import logoImage from "@assets/Findermeister logo_1755186313310.jpg";
+import logoImage from "@assets/findermeister logo real_1756395091374.jpg";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";

@@ -92,7 +92,18 @@ export default function AdminFinderLevels() {
       toast({ title: "Success", description: "Finder level created successfully" });
     },
     onError: (error: any) => {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      let errorMessage = "Failed to create finder level";
+      
+      // Handle specific validation errors from backend
+      if (error.message?.includes('exceed')) {
+        errorMessage = error.message;
+      } else if (error.message?.includes('numeric field overflow')) {
+        errorMessage = "Some values exceed maximum allowed limits. Please check your input.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast({ variant: "destructive", title: "Error", description: errorMessage });
     }
   });
 
@@ -109,7 +120,18 @@ export default function AdminFinderLevels() {
       toast({ title: "Success", description: "Finder level updated successfully" });
     },
     onError: (error: any) => {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      let errorMessage = "Failed to update finder level";
+      
+      // Handle specific validation errors from backend
+      if (error.message?.includes('exceed')) {
+        errorMessage = error.message;
+      } else if (error.message?.includes('numeric field overflow')) {
+        errorMessage = "Some values exceed maximum allowed limits. Please check your input.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast({ variant: "destructive", title: "Error", description: errorMessage });
     }
   });
 
@@ -185,6 +207,27 @@ export default function AdminFinderLevels() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate minEarnedAmount
+    const minEarnedAmount = parseFloat(formData.minEarnedAmount) || 0;
+    if (minEarnedAmount > 99999999.99) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Minimum earned amount cannot exceed ₦99,999,999.99"
+      });
+      return;
+    }
+
+    // Validate minReviewPercentage
+    if (formData.minReviewPercentage > 200) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Review percentage cannot exceed 200% (equivalent to 10.0 star rating)"
+      });
+      return;
+    }
 
     const cleanedData = {
       ...formData,
@@ -386,9 +429,22 @@ export default function AdminFinderLevels() {
                       id="minEarnedAmount"
                       type="number"
                       value={formData.minEarnedAmount}
-                      onChange={(e) => setFormData(prev => ({ ...prev, minEarnedAmount: e.target.value }))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numValue = parseFloat(value) || 0;
+                        if (numValue > 99999999.99) {
+                          toast({
+                            variant: "destructive",
+                            title: "Validation Error",
+                            description: "Minimum earned amount cannot exceed ₦99,999,999.99"
+                          });
+                          return;
+                        }
+                        setFormData(prev => ({ ...prev, minEarnedAmount: value }));
+                      }}
                       placeholder="0"
                       min="0"
+                      max="99999999.99"
                       step="0.01"
                     />
                   </div>
@@ -409,10 +465,21 @@ export default function AdminFinderLevels() {
                       id="minReviewPercentage"
                       type="number"
                       value={formData.minReviewPercentage}
-                      onChange={(e) => setFormData(prev => ({ ...prev, minReviewPercentage: parseFloat(e.target.value) || 0 }))}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value) || 0;
+                        if (value > 200) {
+                          toast({
+                            variant: "destructive",
+                            title: "Validation Error",
+                            description: "Review percentage cannot exceed 200% (equivalent to 10.0 star rating)"
+                          });
+                          return;
+                        }
+                        setFormData(prev => ({ ...prev, minReviewPercentage: value }));
+                      }}
                       placeholder="0"
                       min="0"
-                      max="100"
+                      max="200"
                       step="0.01"
                     />
                   </div>

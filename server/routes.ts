@@ -236,8 +236,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { email, password } = req.body;
 
       const user = await storage.getUserByEmail(email);
-      if (!user || user.isBanned) {
+      if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Check if user is banned and return specific ban information
+      if (user.isBanned) {
+        return res.status(403).json({ 
+          message: "Your account has been banned",
+          banned: true,
+          bannedReason: user.bannedReason || "Violation of platform terms",
+          bannedAt: user.bannedAt
+        });
       }
 
       const isValidPassword = await bcrypt.compare(password, user.password);
@@ -730,9 +740,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Create find request body:', req.body);
       console.log('Create find files:', req.files);
 
-      // Check if client is verified before allowing find creation
+      // Check if client is banned before allowing find creation
       const client = await storage.getUser(req.user.userId);
-      if (!client || !client.isVerified) {
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+
+      if (client.isBanned) {
+        return res.status(403).json({
+          message: "Your account has been banned from creating finds.",
+          banned: true,
+          bannedReason: client.bannedReason,
+          bannedAt: client.bannedAt
+        });
+      }
+
+      // Check if client is verified before allowing find creation
+      if (!client.isVerified) {
         return res.status(403).json({
           message: "Account must be verified to post finds.",
           verified: false,
@@ -997,9 +1021,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Finder profile not found" });
       }
 
-      // Check if finder is verified
+      // Check if finder is banned before allowing proposal submission
       const finderUser = await storage.getUser(req.user.userId);
-      if (!finderUser || !finderUser.isVerified || !finder.isVerified) {
+      if (!finderUser) {
+        return res.status(404).json({ message: "Finder user not found" });
+      }
+
+      if (finderUser.isBanned) {
+        return res.status(403).json({
+          message: "Your account has been banned from submitting proposals.",
+          banned: true,
+          bannedReason: finderUser.bannedReason,
+          bannedAt: finderUser.bannedAt
+        });
+      }
+
+      // Check if finder is verified
+      if (!finderUser.isVerified || !finder.isVerified) {
         return res.status(403).json({
           message: "Account must be verified and profile completed to submit proposals.",
           verified: false,
@@ -2731,9 +2769,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (status === 'accepted') {
         console.log(`Accepting order for contract ${contract.id}, amount: ${contract.amount}, finder: ${contract.finderId}`);
 
-        // Release funds to finder FIRST
-        console.log(`Releasing funds: ${contract.amount} to finder ${contract.finderId}`);
-        await storage.releaseFundsToFinder(contract.finderId, contract.amount.toString());
+        // Get platform fee percentage from admin settings and calculate net amount
+        const feePercentageSetting = await storage.getAdminSetting('finder_earnings_charge_percentage');
+        const platformFeePercentage = parseFloat(feePercentageSetting?.value || '5');
+        const grossAmount = parseFloat(contract.amount);
+        const feeAmount = (grossAmount * platformFeePercentage) / 100;
+        const netAmount = grossAmount - feeAmount;
+        
+        // Release net amount to finder (after fee deduction)
+        console.log(`Releasing funds: ${netAmount} to finder ${contract.finderId} (gross: ${grossAmount}, fee: ${feeAmount})`);
+        await storage.releaseFundsToFinder(contract.finderId, netAmount.toString());
         console.log(`Funds released to finder ${contract.finderId}`);
 
         // Then update contract status
@@ -2755,7 +2800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await emailService.notifyFinderOrderAccepted(
                 finderUser.email,
                 `${clientUser.firstName} ${clientUser.lastName}`,
-                contract.amount
+                netAmount
               );
             }
           }
@@ -4227,8 +4272,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Finder not found" });
       }
 
-      // Release funds to finder (95% after platform fee)
-      const platformFeePercentage = 5;
+      // Get platform fee percentage from admin settings
+      const feePercentageSetting = await storage.getAdminSetting('finder_earnings_charge_percentage');
+      const platformFeePercentage = parseFloat(feePercentageSetting?.value || '5');
+      
+      // Calculate fee deduction and net amount
       const grossAmount = parseFloat(contract.amount);
       const feeAmount = (grossAmount * platformFeePercentage) / 100;
       const netAmount = grossAmount - feeAmount;
@@ -4311,8 +4359,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const beforeBalance = parseFloat(finder.availableBalance || '0');
 
-      // Release funds to finder
-      await storage.releaseFundsToFinder(contract.finderId, contract.amount);
+      // Get platform fee percentage from admin settings
+      const feePercentageSetting = await storage.getAdminSetting('finder_earnings_charge_percentage');
+      const platformFeePercentage = parseFloat(feePercentageSetting?.value || '5');
+      
+      // Calculate fee deduction and net amount
+      const grossAmount = parseFloat(contract.amount);
+      const feeAmount = (grossAmount * platformFeePercentage) / 100;
+      const netAmount = grossAmount - feeAmount;
+
+      // Release net amount to finder (after fee deduction)
+      await storage.releaseFundsToFinder(contract.finderId, netAmount.toString());
 
       // Get updated finder details
       const updatedFinder = await storage.getFinder(contract.finderId);
@@ -4325,7 +4382,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: finder.id,
           beforeBalance: beforeBalance.toFixed(2),
           afterBalance: afterBalance.toFixed(2),
-          amountReleased: contract.amount
+          amountReleased: netAmount.toFixed(2),
+          platformFee: feeAmount.toFixed(2),
+          platformFeePercentage: platformFeePercentage
         }
       });
     } catch (error) {
@@ -5299,25 +5358,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
+      // Validate input data
+      const { name, description, minEarnedAmount, minJobsCompleted, minReviewPercentage, icon, color, order, isActive } = req.body;
+
+      // Validate minEarnedAmount (decimal(10,2) - max 99,999,999.99)
+      const earnedAmount = parseFloat(minEarnedAmount) || 0;
+      if (earnedAmount > 99999999.99) {
+        return res.status(400).json({ message: "Minimum earned amount cannot exceed ₦99,999,999.99" });
+      }
+
+      // Validate minReviewPercentage (converts to minRating decimal(3,2) - max 10.00)
+      const reviewPercentage = parseFloat(minReviewPercentage) || 0;
+      if (reviewPercentage > 200) {
+        return res.status(400).json({ message: "Review percentage cannot exceed 200% (equivalent to 10.0 star rating)" });
+      }
+
       // Map frontend fields to database schema
-      const frontendData = req.body;
       const dbData = {
-        name: frontendData.name,
-        description: frontendData.description,
-        minEarnedAmount: frontendData.minEarnedAmount,
-        minJobsCompleted: frontendData.minJobsCompleted,
-        minRating: frontendData.minReviewPercentage ? (frontendData.minReviewPercentage / 20).toString() : "0", // Convert percentage to 5-star rating
-        badgeIcon: frontendData.icon,
+        name,
+        description,
+        minEarnedAmount: earnedAmount.toString(),
+        minJobsCompleted: parseInt(minJobsCompleted) || 0,
+        minRating: reviewPercentage ? (reviewPercentage / 20).toString() : "0", // Convert percentage to 5-star rating
+        badgeIcon: icon,
         badgeEmoji: '', // Default empty, can be added later
-        color: frontendData.color,
-        order: frontendData.order,
-        isActive: frontendData.isActive
+        color,
+        order: parseInt(order) || 1,
+        isActive: Boolean(isActive)
       };
 
       const level = await storage.createFinderLevel(dbData);
       res.json(level);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create finder level error:', error);
+      
+      // Handle specific database errors
+      if (error.message?.includes('numeric field overflow') || error.message?.includes('value too long for type character')) {
+        return res.status(400).json({ message: "Invalid data format: Some values exceed maximum allowed limits" });
+      }
+      
       res.status(500).json({ message: "Failed to create finder level" });
     }
   });
@@ -5330,19 +5409,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { id } = req.params;
       
+      // Validate input data
+      const { name, description, minEarnedAmount, minJobsCompleted, minReviewPercentage, icon, color, order, isActive } = req.body;
+
+      // Validate minEarnedAmount (decimal(10,2) - max 99,999,999.99)
+      const earnedAmount = parseFloat(minEarnedAmount) || 0;
+      if (earnedAmount > 99999999.99) {
+        return res.status(400).json({ message: "Minimum earned amount cannot exceed ₦99,999,999.99" });
+      }
+
+      // Validate minReviewPercentage (converts to minRating decimal(3,2) - max 10.00)
+      const reviewPercentage = parseFloat(minReviewPercentage) || 0;
+      if (reviewPercentage > 200) {
+        return res.status(400).json({ message: "Review percentage cannot exceed 200% (equivalent to 10.0 star rating)" });
+      }
+      
       // Map frontend fields to database schema
-      const frontendData = req.body;
       const dbData = {
-        name: frontendData.name,
-        description: frontendData.description,
-        minEarnedAmount: frontendData.minEarnedAmount,
-        minJobsCompleted: frontendData.minJobsCompleted,
-        minRating: frontendData.minReviewPercentage ? (frontendData.minReviewPercentage / 20).toString() : "0", // Convert percentage to 5-star rating
-        badgeIcon: frontendData.icon,
+        name,
+        description,
+        minEarnedAmount: earnedAmount.toString(),
+        minJobsCompleted: parseInt(minJobsCompleted) || 0,
+        minRating: reviewPercentage ? (reviewPercentage / 20).toString() : "0", // Convert percentage to 5-star rating
+        badgeIcon: icon,
         badgeEmoji: '', // Default empty, can be added later
-        color: frontendData.color,
-        order: frontendData.order,
-        isActive: frontendData.isActive
+        color,
+        order: parseInt(order) || 1,
+        isActive: Boolean(isActive)
       };
       
       const level = await storage.updateFinderLevel(id, dbData);
@@ -5352,8 +5445,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(level);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Update finder level error:', error);
+      
+      // Handle specific database errors
+      if (error.message?.includes('numeric field overflow') || error.message?.includes('value too long for type character')) {
+        return res.status(400).json({ message: "Invalid data format: Some values exceed maximum allowed limits" });
+      }
+      
       res.status(500).json({ message: "Failed to update finder level" });
     }
   });
@@ -5552,6 +5651,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // --- Monthly Token Grant Management ---
+  // Get monthly token distributions
+  app.get("/api/admin/monthly-distributions", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { month, year } = req.query;
+      
+      if (!month || !year) {
+        return res.status(400).json({ message: "Month and year are required" });
+      }
+
+      const monthNum = parseInt(month as string);
+      const yearNum = parseInt(year as string);
+
+      if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
+        return res.status(400).json({ message: "Invalid month or year" });
+      }
+
+      const distributions = await storage.getMonthlyDistributions(monthNum, yearNum);
+      res.json(distributions);
+    } catch (error) {
+      console.error('Failed to fetch monthly distributions:', error);
+      res.status(500).json({ message: "Failed to fetch monthly distributions" });
+    }
+  });
+
+  // Distribute monthly tokens to all active finders
+  app.post("/api/admin/distribute-monthly-tokens", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const result = await storage.distributeMonthlyTokens();
+      res.json({ 
+        message: "Monthly tokens distributed successfully",
+        distributed: result.distributed,
+        alreadyDistributed: result.alreadyDistributed
+      });
+    } catch (error: any) {
+      console.error('Failed to distribute monthly tokens:', error);
+      res.status(500).json({ 
+        message: "Failed to distribute monthly tokens",
+        error: error.message
+      });
+    }
+  });
+
   app.post("/api/admin/monthly-token-grant", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       if (req.user.role !== 'admin') {

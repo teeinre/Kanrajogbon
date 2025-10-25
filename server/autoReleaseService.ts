@@ -92,8 +92,15 @@ export class AutoReleaseService {
             escrowStatus: 'released'
           });
 
-          // Release funds to finder's available balance
-          await storage.releaseFundsToFinder(contract.finderId, contract.amount.toString());
+          // Get platform fee percentage from admin settings and calculate net amount
+          const feePercentageSetting = await storage.getAdminSetting('finder_earnings_charge_percentage');
+          const platformFeePercentage = parseFloat(feePercentageSetting?.value || '5');
+          const grossAmount = parseFloat(contract.amount);
+          const feeAmount = (grossAmount * platformFeePercentage) / 100;
+          const netAmount = grossAmount - feeAmount;
+          
+          // Release net amount to finder (after fee deduction)
+          await storage.releaseFundsToFinder(contract.finderId, netAmount.toString());
           
           releasedCount++;
           
@@ -126,8 +133,15 @@ export class AutoReleaseService {
           // Update contract status to released
           await storage.updateContract(contract.id, { escrowStatus: 'released' });
           
-          // Release funds to finder's available balance
-          await storage.releaseFundsToFinder(contract.finderId, contract.amount.toString());
+          // Get platform fee percentage from admin settings and calculate net amount
+          const feePercentageSetting = await storage.getAdminSetting('finder_earnings_charge_percentage');
+          const platformFeePercentage = parseFloat(feePercentageSetting?.value || '5');
+          const grossAmount = parseFloat(contract.amount);
+          const feeAmount = (grossAmount * platformFeePercentage) / 100;
+          const netAmount = grossAmount - feeAmount;
+          
+          // Release net amount to finder (after fee deduction)
+          await storage.releaseFundsToFinder(contract.finderId, netAmount.toString());
           
           releasedCount++;
           
@@ -165,7 +179,15 @@ export class AutoReleaseService {
         }
 
         await storage.updateContract(contractId, { escrowStatus: 'released' });
-        await storage.releaseFundsToFinder(contract.finderId, contract.amount.toString());
+        // Get platform fee percentage from admin settings and calculate net amount
+        const feePercentageSetting = await storage.getAdminSetting('finder_earnings_charge_percentage');
+        const platformFeePercentage = parseFloat(feePercentageSetting?.value || '5');
+        const grossAmount = parseFloat(contract.amount);
+        const feeAmount = (grossAmount * platformFeePercentage) / 100;
+        const netAmount = grossAmount - feeAmount;
+        
+        // Release net amount to finder (after fee deduction)
+        await storage.releaseFundsToFinder(contract.finderId, netAmount.toString());
 
         console.log(`Manually released contract ${contractId}`);
         return { success: true, message: 'Contract released successfully' };

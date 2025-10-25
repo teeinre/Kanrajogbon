@@ -22,7 +22,7 @@ export default function AboutUs() {
         <div className="max-w-6xl mx-auto px-6 py-16 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">About FinderMeister</h1>
           <p className="text-xl md:text-2xl font-light max-w-4xl mx-auto leading-relaxed">
-            The world's marketplace for hard-to-find solutions — powered by trusted, resourceful Finders, gamified for mastery, and secured by escrow.
+            One Successful Find at a Time
           </p>
         </div>
       </div>
@@ -31,34 +31,40 @@ export default function AboutUs() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Our Story */}
         <section className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
-          <div className="prose max-w-none text-gray-700 text-lg leading-relaxed space-y-4">
+          <div className="prose max-w-none text-gray-700 text-lg leading-relaxed space-y-6">
             <p>
-              We exist to solve the everyday challenge of scarcity: when Clients can't easily access what they need, FinderMeister connects them with resourceful Finders who can deliver. From Aso Ebi fabrics for cultural events, to vintage props for film and theatre, to real estate solutions — from short-stay vacation rentals to long-term property finds, and even rare collectibles or niche services — FinderMeister makes the impossible, possible.
+              At FinderMeister, we believe that every need — big or small — deserves a solution. 
+              Our mission is to connect people who are looking for a product or service with trusted individuals, called Finders, who can help them get it safely, quickly, and efficiently.
             </p>
             <p>
-              Our unique gamification system allows Finders to earn ranks, badges, and tokens as they complete successful finds, ensuring that Clients always work with proven, trustworthy partners. Every transaction is protected by escrow, giving both Clients and Finders the confidence to collaborate securely.
+              Whether it's a rare collectible, a home service, or a specific item that's hard to find, FinderMeister empowers people to post a request and get real human help — not just search results.
             </p>
-            <p className="font-semibold text-finder-red">
-              At FinderMeister, our mission is simple: to empower people to find what they need through a trusted network of resourceful human searchers — delivering solutions, one successful find at a time.
+            
+            <h2 className="text-3xl font-bold text-gray-900 mt-12 mb-6">Why We Exist</h2>
+            <p>
+              Too often, people waste hours searching online or walking store to store without success. At the same time, many others have the skill, time, or network to locate those items but lack a structured, trustworthy way to offer their help.
+            </p>
+            <p>
+              FinderMeister bridges that gap. 
+              We've built a human-powered search platform backed by escrow protection, reviews, and gamified reputation levels (from Novice to GrandMeister), ensuring that every transaction is transparent, secure, and rewarding for both sides.
             </p>
           </div>
         </section>
 
         {/* Core Values */}
         <section className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">What Makes Us Different</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Core Values</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <Card className="border-2 hover:border-finder-red transition-colors">
               <CardContent className="pt-6">
                 <div className="flex justify-center mb-4">
                   <div className="w-16 h-16 bg-finder-red/10 rounded-full flex items-center justify-center">
-                    <Trophy className="w-8 h-8 text-finder-red" />
+                    <Shield className="w-8 h-8 text-finder-red" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-3">Gamified Mastery</h3>
+                <h3 className="text-xl font-bold text-center mb-3">Trust</h3>
                 <p className="text-gray-600 text-center">
-                  Finders earn ranks, badges, and tokens as they complete successful finds, creating a community of proven experts you can trust.
+                  Every finder is verified, and every transaction is protected.
                 </p>
               </CardContent>
             </Card>
@@ -67,12 +73,26 @@ export default function AboutUs() {
               <CardContent className="pt-6">
                 <div className="flex justify-center mb-4">
                   <div className="w-16 h-16 bg-finder-red/10 rounded-full flex items-center justify-center">
-                    <Shield className="w-8 h-8 text-finder-red" />
+                    <Users className="w-8 h-8 text-finder-red" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-3">Escrow Protection</h3>
+                <h3 className="text-xl font-bold text-center mb-3">Community</h3>
                 <p className="text-gray-600 text-center">
-                  Every transaction is secured by escrow through licensed payment processors, ensuring both parties are protected.
+                  A growing network where help is a value, not just a service.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:border-finder-red transition-colors">
+              <CardContent className="pt-6">
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 bg-finder-red/10 rounded-full flex items-center justify-center">
+                    <Heart className="w-8 h-8 text-finder-red" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-center mb-3">Safety</h3>
+                <p className="text-gray-600 text-center">
+                  Your funds stay secure in escrow until you confirm delivery.
                 </p>
               </CardContent>
             </Card>
@@ -84,9 +104,9 @@ export default function AboutUs() {
                     <Target className="w-8 h-8 text-finder-red" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-center mb-3">Resourceful Network</h3>
+                <h3 className="text-xl font-bold text-center mb-3">Innovation</h3>
                 <p className="text-gray-600 text-center">
-                  Connect with human searchers who specialize in finding the impossible — from cultural items to real estate to rare collectibles.
+                  Combining technology with human intuition to make finding simple again.
                 </p>
               </CardContent>
             </Card>
@@ -180,9 +200,9 @@ export default function AboutUs() {
                 <Eye className="w-10 h-10 text-finder-red" />
                 <h2 className="text-3xl font-bold text-gray-900">Our Vision</h2>
               </div>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                To become the world's most trusted marketplace for solving scarcity challenges — where every hard-to-find need meets a resourceful solution, secured by trust and powered by community.
-              </p>
+              <blockquote className="text-lg text-gray-700 leading-relaxed italic border-l-4 border-finder-red pl-4">
+                To become the world's most reliable human-powered search platform — where every request matters, and every solution begins with one successful find.
+              </blockquote>
             </CardContent>
           </Card>
         </section>
@@ -195,9 +215,9 @@ export default function AboutUs() {
                 <Target className="w-10 h-10 text-blue-600" />
                 <h2 className="text-3xl font-bold text-gray-900">Our Mission</h2>
               </div>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                To empower people to find what they need through a trusted network of resourceful human searchers — delivering solutions, one successful find at a time.
-              </p>
+              <blockquote className="text-lg text-gray-700 leading-relaxed italic border-l-4 border-blue-600 pl-4">
+                To empower people to find what they need through a trusted network of human searchers — delivering solutions, one successful find at a time.
+              </blockquote>
             </CardContent>
           </Card>
         </section>
@@ -210,12 +230,12 @@ export default function AboutUs() {
             Whether you're seeking hard-to-find solutions or ready to become a trusted Finder, FinderMeister is your platform for making the impossible, possible.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/register">
+            <Link href="/register">
               <Button className="bg-finder-red hover:bg-finder-red-dark text-white px-8 py-6 text-lg">
                 Become a Client
               </Button>
             </Link>
-            <Link href="/auth/register-finder">
+            <Link href="/register/finder">
               <Button variant="outline" className="border-finder-red text-finder-red hover:bg-finder-red hover:text-white px-8 py-6 text-lg">
                 Become a Finder
               </Button>

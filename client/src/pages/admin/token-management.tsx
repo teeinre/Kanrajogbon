@@ -161,7 +161,7 @@ export default function TokenManagement() {
 
   // Grant tokens to specific user mutation
   const grantTokens = useMutation({
-    mutationFn: (data: { userId: string; userRole: string; amount: number; reason: string }) =>
+    mutationFn: (data: { userId: string; userType: string; amount: number; reason: string }) =>
       apiRequest("/api/admin/grant-tokens", {
         method: "POST",
         body: JSON.stringify(data),
@@ -170,9 +170,14 @@ export default function TokenManagement() {
         },
       }),
     onSuccess: (data, variables) => {
+      // Get the user's name for the success message
+      const targetUsers = variables.userType === 'finder' ? finders : clients;
+      const recipient = targetUsers.find((user: any) => user.id === variables.userId);
+      const recipientName = recipient ? `${recipient.firstName} ${recipient.lastName}` : variables.userType;
+      
       toast({
         title: "Tokens Granted",
-        description: `${variables.amount} tokens have been successfully granted to the ${variables.userRole}.`,
+        description: `${variables.amount} tokens have been successfully granted to ${recipientName}.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/token-grants"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -264,7 +269,7 @@ export default function TokenManagement() {
 
     grantTokens.mutate({
       userId: selectedUserId,
-      userRole: selectedUserRole,
+      userType: selectedUserRole,
       amount,
       reason: grantReason,
     });

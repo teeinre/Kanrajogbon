@@ -735,46 +735,51 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllContractsWithTransactions() {
-    const contracts = await db.select().from(contracts);
+    try {
+      const contractsData = await db.select().from(contracts);
 
-    const contractsWithDetails = await Promise.all(
-      contracts.map(async (contract) => {
-        const client = await this.getUser(contract.clientId);
-        const finder = await this.getFinder(contract.finderId);
-        const finderUser = finder ? await this.getUser(finder.userId) : null;
-        const proposal = await this.getProposal(contract.proposalId);
-        const find = proposal ? await this.getFind(proposal.findId) : null;
+      const contractsWithDetails = await Promise.all(
+        contractsData.map(async (contract) => {
+          const client = await this.getUser(contract.clientId);
+          const finder = await this.getFinder(contract.finderId);
+          const finderUser = finder ? await this.getUser(finder.userId) : null;
+          const proposal = await this.getProposal(contract.proposalId);
+          const find = proposal ? await this.getFind(proposal.findId) : null;
 
-        // Get transaction with payment reference for this contract
-        const transactions = await db
-          .select()
-          .from(transactions)
-          .where(
-            and(
-              eq(transactions.userId, contract.clientId),
-              eq(transactions.type, 'contract_payment')
+          // Get transaction with payment reference for this contract
+          const contractTransactions = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                eq(transactions.userId, contract.clientId),
+                eq(transactions.type, 'contract_payment')
+              )
             )
-          )
-          .orderBy(desc(transactions.createdAt))
-          .limit(10);
+            .orderBy(desc(transactions.createdAt))
+            .limit(10);
 
-        // Find the transaction that matches this contract amount
-        const contractTransaction = transactions.find(
-          t => parseFloat(t.amount.toString()) === parseFloat(contract.amount)
-        );
+          // Find the transaction that matches this contract amount
+          const contractTransaction = contractTransactions.find(
+            t => parseFloat(t.amount.toString()) === parseFloat(contract.amount)
+          );
 
-        return {
-          ...contract,
-          clientName: client ? `${client.firstName} ${client.lastName}` : null,
-          finderName: finderUser ? `${finderUser.firstName} ${finderUser.lastName}` : null,
-          findTitle: find?.title || null,
-          paymentReference: contractTransaction?.reference || null,
-          transactionId: contractTransaction?.id || null,
-        };
-      })
-    );
+          return {
+            ...contract,
+            clientName: client ? `${client.firstName} ${client.lastName}` : null,
+            finderName: finderUser ? `${finderUser.firstName} ${finderUser.lastName}` : null,
+            findTitle: find?.title || null,
+            paymentReference: contractTransaction?.reference || null,
+            transactionId: contractTransaction?.id || null,
+          };
+        })
+      );
 
-    return contractsWithDetails;
+      return contractsWithDetails;
+    } catch (error) {
+      console.error('Error in getAllContractsWithTransactions:', error);
+      throw error;
+    }
   }
 
   // Admin operations

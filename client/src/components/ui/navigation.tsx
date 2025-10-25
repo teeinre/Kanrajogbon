@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Handshake, Menu } from "lucide-react";
-import logoImage from "@assets/Findermeister logo_1755186313310.jpg";
+import logoImage from "@assets/findermeister logo real_1756395091374.jpg";
 import { useState } from "react";
 
 export default function Navigation() {

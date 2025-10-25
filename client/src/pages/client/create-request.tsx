@@ -165,7 +165,7 @@ export default function CreateRequest() {
               variant="outline"
               size="sm"
               onClick={() => {
-                navigate("/auth/login");
+                navigate("/login");
               }}
               className="bg-white hover:bg-gray-50 text-gray-900 border-gray-300"
             >

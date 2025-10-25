@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 import AdminHeader from "@/components/admin-header";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,13 +15,9 @@ import AdminIssueStrike from "@/components/admin-issue-strike";
 import { 
   Users, 
   Search, 
-  MoreVertical, 
-  UserCheck, 
-  UserX, 
   CheckCircle, 
   XCircle, 
   AlertTriangle,
-  Eye,
   Mail,
   Calendar,
   Crown,
@@ -39,6 +35,8 @@ interface ExtendedUser {
   role: 'admin' | 'finder' | 'client';
   isVerified: boolean;
   isBanned: boolean;
+  bannedReason?: string;
+  bannedAt?: string;
   createdAt?: string;
   profileImageUrl?: string;
 }
@@ -232,7 +230,7 @@ export default function AdminUsers() {
         {/* Compact Users Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {filteredUsers.map((userData) => (
-            <Link key={userData.id} href={getProfileUrl(userData)}>
+            <Link key={userData.id} href={`/admin/users/${userData.id}`}>
               <Card className="group bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer rounded-lg overflow-hidden">
                 <CardContent className="p-3">
                     {/* Compact User Header */}
@@ -272,52 +270,7 @@ export default function AdminUsers() {
                         </div>
                       </div>
                       
-                      {/* Smaller Action Menu */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="opacity-60 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex-shrink-0">
-                            <MoreVertical className="w-3 h-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-lg">
-                          <DropdownMenuItem onClick={() => handleVerifyUser(userData.id, !userData.isVerified)} className="flex items-center gap-2 px-3 py-2 rounded-lg">
-                            {userData.isVerified ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                            {userData.isVerified ? 'Unverify User' : 'Verify User'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleBanUser(userData, !userData.isBanned)} 
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          >
-                            {userData.isBanned ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                            {userData.isBanned ? 'Unban User' : 'Ban User'}
-                          </DropdownMenuItem>
-                          
-                          {(userData.role === 'client' || userData.role === 'finder') && (
-                            <DropdownMenuItem 
-                              onSelect={(e) => e.preventDefault()}
-                              asChild
-                            >
-                              <div className="p-0">
-                                <AdminIssueStrike
-                                  userId={userData.id}
-                                  userRole={userData.role as 'client' | 'finder'}
-                                  userName={`${userData.firstName} ${userData.lastName}`}
-                                  trigger={
-                                    <button 
-                                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 w-full text-left cursor-pointer"
-                                      type="button"
-                                    >
-                                      <AlertTriangle className="w-4 h-4" />
-                                      Issue Strike
-                                    </button>
-                                  }
-                                  onStrikeIssued={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] })}
-                                />
-                              </div>
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+
                     </div>
                     
                     {/* Condensed User Details */}
@@ -347,6 +300,77 @@ export default function AdminUsers() {
                           </Badge>
                         )}
                       </div>
+                      
+                      {/* Ban Reason Display */}
+                      {userData.isBanned && userData.bannedReason && (
+                        <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                          <p className="text-xs text-red-700 dark:text-red-300 font-medium">Ban Reason:</p>
+                          <p className="text-xs text-red-600 dark:text-red-400 mt-1">{userData.bannedReason}</p>
+                          {userData.bannedAt && (
+                            <p className="text-xs text-red-500 dark:text-red-500 mt-1">
+                              Banned on: {new Date(userData.bannedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Action Buttons - Replace Dropdown */}
+                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleVerifyUser(userData.id, !userData.isVerified);
+                        }}
+                        className={`text-xs px-2 py-1 rounded-lg ${
+                          userData.isVerified 
+                            ? 'border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900/20' 
+                            : 'border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/20'
+                        }`}
+                      >
+                        {userData.isVerified ? 'Unverify' : 'Verify'}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (userData.isBanned) {
+                            banUserMutation.mutate({ userId: userData.id, action: 'unban' });
+                          } else {
+                            handleBanUser(userData, true);
+                          }
+                        }}
+                        className={`text-xs px-2 py-1 rounded-lg ${
+                          userData.isBanned 
+                            ? 'border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/20' 
+                            : 'border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20'
+                        }`}
+                      >
+                        {userData.isBanned ? 'Unban' : 'Ban'}
+                      </Button>
+                      
+                      {(userData.role === 'client' || userData.role === 'finder') && (
+                        <AdminIssueStrike
+                          userId={userData.id}
+                          userRole={userData.role as 'client' | 'finder'}
+                          userName={`${userData.firstName} ${userData.lastName}`}
+                          trigger={
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => e.preventDefault()}
+                              className="text-xs px-2 py-1 rounded-lg border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900/20"
+                            >
+                              Strike
+                            </Button>
+                          }
+                          onStrikeIssued={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] })}
+                        />
+                      )}
                     </div>
                   </CardContent>
                 </Card>

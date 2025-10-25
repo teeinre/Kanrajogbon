@@ -276,12 +276,12 @@ export default function Landing() {
                 <span className="text-xl font-bold">FinderMeister</span>
               </div>
               <div className="flex flex-wrap justify-center gap-8 text-gray-400 mb-8">
-                <a href="#" className="hover:text-white transition-colors">About</a>
-                <a href="/support/contact" className="hover:text-white transition-colors">Contact Us</a>
-                <a href="/support" className="hover:text-white transition-colors">Support</a>
-                <a href="/support/help-center" className="hover:text-white transition-colors">FAQ</a>
-                <a href="/privacy-policy" className="hover:text-white transition-colors">Privacy</a>
-                <a href="/terms-and-conditions" className="hover:text-white transition-colors">TOS</a>
+                <Link href="/about-us" className="hover:text-white transition-colors">About</Link>
+                <Link href="/support/contact" className="hover:text-white transition-colors">Contact Us</Link>
+                <Link href="/support" className="hover:text-white transition-colors">Support</Link>
+                <Link href="/support/help-center" className="hover:text-white transition-colors">FAQ</Link>
+                <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
+                <Link href="/terms-and-conditions" className="hover:text-white transition-colors">TOS</Link>
               </div>
               <p className="text-gray-400">
                 © 2025 FinderMeister. All rights reserved.

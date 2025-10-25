@@ -30,6 +30,7 @@ import FinderProposalDetails from "@/pages/finder/proposal-details";
 import ProposalDetail from "@/pages/client/proposal-detail";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminUsers from "@/pages/admin/users";
+import { AdminUserProfile } from "@/pages/admin/user-profile";
 import AdminRequests from "@/pages/admin/requests";
 import AdminCategories from "@/pages/admin/categories";
 import AdminSettings from "@/pages/admin/settings";
@@ -80,9 +81,11 @@ import AgentTicketDetails from "@/pages/agent/ticket-details";
 import AdminContactSettings from "./pages/admin/contact-settings";
 import AdminDatabaseExport from "./pages/admin/database-export";
 import AdminFAQCategories from "./pages/admin/faq-categories";
-import AdminFinancialDashboard from "@/pages/admin/financial-dashboard";
+import { AdminFinancialDashboard } from "@/pages/admin/financial-dashboard";
 import AdminContractManagement from "@/pages/admin/contract-management";
 import AdminDisputes from "@/pages/admin/disputes";
+import { BanAlertDemo } from "@/components/BanAlertDemo";
+import AboutUs from "@/pages/about-us";
 import {
   AdminRoute,
   FinderRoute,
@@ -200,8 +203,11 @@ function Router() {
       <Route path="/support/contact" component={ContactSupport} />
       <Route path="/terms-and-conditions" component={TermsAndConditions} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/about-us" component={AboutUs} />
+      <Route path="/ban-alert-demo" component={BanAlertDemo} />
       <Route path="/admin/dashboard" component={() => <AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/admin/users" component={() => <AdminRoute><AdminUsers /></AdminRoute>} />
+      <Route path="/admin/users/:id" component={() => <AdminRoute><AdminUserProfile /></AdminRoute>} />
       <Route path="/admin/requests" component={() => <AdminRoute><AdminRequests /></AdminRoute>} />
       <Route path="/admin/categories" component={() => <AdminRoute><AdminCategories /></AdminRoute>} />
       <Route path="/admin/settings" component={() => <AdminRoute><AdminSettings /></AdminRoute>} />

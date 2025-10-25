@@ -11,6 +11,7 @@ import { Handshake, UserPlus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@shared/schema";
+import logoImage from "@assets/findermeister logo real_1756395091374.jpg";
 
 export default function RegisterFinder() {
   const [, navigate] = useLocation();
@@ -122,17 +123,47 @@ export default function RegisterFinder() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-finder-red text-white px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <Handshake className="w-6 h-6" />
-            <span className="text-xl font-bold">FinderMeister</span>
-          </Link>
-          <nav className="flex items-center space-x-6">
-            <Link href="#" className="hover:underline">How it Works</Link>
-            <Link href="/login" className="hover:underline">Log In</Link>
-            <span className="bg-white text-finder-red px-3 py-1 rounded font-medium">Sign Up</span>
-          </nav>
+      <header className="bg-finder-red text-white px-4 py-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Mobile Layout */}
+          <div className="md:hidden">
+            <div className="flex flex-col space-y-4">
+              {/* Logo */}
+              <div className="flex items-center justify-center">
+                <Link href="/" className="flex items-center space-x-2">
+                  <img
+                    src={logoImage}
+                    alt="FinderMeister Logo"
+                    className="w-6 h-6 object-contain rounded-full"
+                  />
+                  <span className="text-xl font-bold">FinderMeister</span>
+                </Link>
+              </div>
+              {/* Navigation Menu */}
+              <nav className="flex items-center justify-center space-x-4">
+                <Link href="#" className="text-sm hover:underline">How it Works</Link>
+                <Link href="/login" className="text-sm hover:underline">Log In</Link>
+                <span className="bg-white text-finder-red px-3 py-1 rounded font-medium text-sm">Sign Up</span>
+              </nav>
+            </div>
+          </div>
+          
+          {/* Desktop Layout */}
+          <div className="hidden md:flex md:items-center md:justify-between">
+            <Link href="/" className="flex items-center space-x-2">
+              <img
+                src={logoImage}
+                alt="FinderMeister Logo"
+                className="w-6 h-6 object-contain rounded-full"
+              />
+              <span className="text-xl font-bold">FinderMeister</span>
+            </Link>
+            <nav className="flex items-center space-x-6">
+              <Link href="#" className="hover:underline">How it Works</Link>
+              <Link href="/login" className="hover:underline">Log In</Link>
+              <span className="bg-white text-finder-red px-3 py-1 rounded font-medium">Sign Up</span>
+            </nav>
+          </div>
         </div>
       </header>
 

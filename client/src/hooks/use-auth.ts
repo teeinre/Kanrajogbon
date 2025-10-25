@@ -8,6 +8,9 @@ interface User {
   lastName: string;
   phone?: string;
   role: string;
+  isBanned?: boolean;
+  bannedReason?: string;
+  bannedAt?: string;
 }
 
 interface AuthContextType {
@@ -302,9 +305,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         let errorMessage = 'Login failed';
+        let errorData: any = {};
+        
         try {
-          const errorData = await response.json();
+          errorData = await response.json();
           errorMessage = errorData.message || errorData.error || 'Login failed';
+          
+          // Handle banned user case
+          if (response.status === 403 && errorData.banned) {
+            const bannedMessage = `Your account has been banned.\n\nReason: ${errorData.bannedReason || 'Violation of platform terms'}\n\nBanned on: ${errorData.bannedAt ? new Date(errorData.bannedAt).toLocaleDateString() : 'Unknown'}\n\nPlease contact support if you believe this is an error.`;
+            throw new Error(bannedMessage);
+          }
         } catch (parseError) {
           // If response is not JSON, try to get text
           try {

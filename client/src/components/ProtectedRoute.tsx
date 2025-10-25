@@ -1,6 +1,8 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { BanAlert } from "./BanAlert";
+import { BanBlockerProvider } from "./BanBlocker";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -68,7 +70,14 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <BanAlert />
+      <BanBlockerProvider>
+        {children}
+      </BanBlockerProvider>
+    </>
+  );
 }
 
 export function AdminRoute({ children }: { children: React.ReactNode }) {

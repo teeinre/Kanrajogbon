@@ -46,11 +46,21 @@ export default function Login() {
         navigate("/");
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Login failed",
-      });
+      // Handle ban notifications specifically
+      if (error.message && error.message.includes('banned')) {
+        toast({
+          variant: "destructive",
+          title: "Account Banned",
+          description: error.message,
+          duration: 10000, // Show for 10 seconds
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Login failed",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

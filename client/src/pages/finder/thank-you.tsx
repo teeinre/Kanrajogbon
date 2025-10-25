@@ -112,7 +112,7 @@ export default function ThankYou() {
             {/* Action Buttons */}
             <div className="flex flex-col space-y-3 pt-4">
               <Button 
-                onClick={() => navigate('/finder/marketplace')}
+                onClick={() => navigate('/finder/browse-requests')}
                 className="bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg"
                 data-testid="button-marketplace"
               >

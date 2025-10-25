@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { User, Users, Settings, FileText, LogOut, BarChart3, MessageSquare, Banknote, Tags, Edit, Menu, ChevronDown, TrendingUp, Coins, Shield, Package, HeadphonesIcon, HelpCircle, List, Tag, AlertTriangle, Gift } from "lucide-react";
-import logoImage from "@assets/Findermeister logo_1755186313310.jpg";
+import logoImage from "@assets/findermeister logo real_1756395091374.jpg";
 import { useTranslation } from "react-i18next";
 
 interface AdminHeaderProps {
